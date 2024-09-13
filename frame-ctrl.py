@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/home/tom/data/git/samsung-frame/.venv python3
 
 import os
 import struct
@@ -6,9 +6,11 @@ import sys
 import time
 import usb.core
 from usb.util import *
+# the image must be in 1024x600 JPEG format
+# convert data/in.jpg -resize 2048x1200! data/imgsf.jpg
 
 vendorId = 0x04e8
-models = {'SPF-87H': (0x2033, 0x2034), 'SPF-107H': (0x2027, 0x2028) }
+models = {'SPF-87H': (0x2033, 0x2034), 'SPF-107H1': (0x2027, 0x2028), 'SPF-107H2': (0x2035, 0x2036) }
 
 chunkSize = 0x4000
 bufferSize = 0x20000
@@ -16,10 +18,10 @@ bufferSize = 0x20000
 def expect(result, verifyList):
   resultList = result.tolist()
   if resultList != verifyList:
-    print >> sys.stderr, "Warning: Expected " + str(verifyList) + " but got " + str(resultList)
+    print(f"Warning: Expected  {verifyList}  but got {resultList}", file=sys.stderr)
 
 def storageToDisplay(dev):
-  print "Setting device to display mode"
+  print ("Setting device to display mode")
   try:
     dev.ctrl_transfer(CTRL_TYPE_STANDARD | CTRL_IN | CTRL_RECIPIENT_DEVICE, 0x06, 0xfe, 0xfe, 254)
   except usb.core.USBError as e:
@@ -28,7 +30,7 @@ def storageToDisplay(dev):
       raise e
 
 def displayModeSetup(dev):
-  print "Sending setup commands to device"
+  print ("Sending setup commands to device")
   result = dev.ctrl_transfer(CTRL_TYPE_VENDOR | CTRL_IN | CTRL_RECIPIENT_DEVICE, 0x04, 0x00, 0x00, 1)
   expect(result, [ 0x03 ])
 #  result = dev.ctrl_transfer(CTRL_TYPE_VENDOR | CTRL_IN | CTRL_RECIPIENT_DEVICE, 0x01, 0x00, 0x00, 2)
@@ -55,7 +57,7 @@ def writeImage(dev):
   if len(sys.argv) < 2 or sys.argv[1] == "-":
     content = sys.stdin.read()
   else:
-    f = open(sys.argv[1])
+    f = open(sys.argv[1],"rb")
     content = f.read()
     f.close()
 
@@ -76,10 +78,10 @@ def writeImage(dev):
 
 found = False
 
-for k, v in models.iteritems():
+for k, v in models.items():
   dev = usb.core.find(idVendor=vendorId, idProduct=v[0])
   if dev:
-    print "Found " + k + " in storage mode"
+    print (f"Found {k} in storage mode")
     storageToDisplay(dev)
     time.sleep(1)
     dev = usb.core.find(idVendor=vendorId, idProduct=v[1])
@@ -87,12 +89,12 @@ for k, v in models.iteritems():
   if not dev:
     dev = usb.core.find(idVendor=vendorId, idProduct=v[1])
   if dev:
-    print "Found " + k + " in display mode"
+    print (f"Found {k} in display mode")
     dev.set_configuration()
     displayModeSetup(dev)
     writeImage(dev)
     found = True
 
 if not found:
-  print >> sys.stderr, "No supported devices found"
+  print ("No supported devices found", file=sys.stderr)
   sys.exit(-1)
