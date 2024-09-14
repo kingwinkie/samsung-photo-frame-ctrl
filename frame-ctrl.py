@@ -26,7 +26,7 @@ def storageToDisplay(dev):
     dev.ctrl_transfer(CTRL_TYPE_STANDARD | CTRL_IN | CTRL_RECIPIENT_DEVICE, 0x06, 0xfe, 0xfe, 254)
   except usb.core.USBError as e:
     errorStr = str(e)
-    if errorStr != 'No such device (it may have been disconnected)':
+    if errorStr != 'No such device (it may have been disconnected)' and e.errno != 5:
       raise e
 
 def displayModeSetup(dev):
@@ -75,26 +75,24 @@ def writeImage(dev):
   
 #  result = dev.ctrl_transfer(CTRL_TYPE_VENDOR | CTRL_IN | CTRL_RECIPIENT_DEVICE, 0x06, 0x00, 0x00, 2)
 #  expect(result, [ 0x00, 0x00 ])
+def main():
+  for k, v in models.items():
+    dev = usb.core.find(idVendor=vendorId, idProduct=v[0])
+    if dev:
+      print (f"Found {k} in storage mode")
+      storageToDisplay(dev)
+      time.sleep(2)
+      dev = None
+    if not dev:
+      dev = usb.core.find(idVendor=vendorId, idProduct=v[1])
 
-found = False
-
-for k, v in models.items():
-  dev = usb.core.find(idVendor=vendorId, idProduct=v[0])
-  if dev:
-    print (f"Found {k} in storage mode")
-    storageToDisplay(dev)
-    time.sleep(1)
-    dev = usb.core.find(idVendor=vendorId, idProduct=v[1])
-    found = True
-  if not dev:
-    dev = usb.core.find(idVendor=vendorId, idProduct=v[1])
-  if dev:
-    print (f"Found {k} in display mode")
-    dev.set_configuration()
-    displayModeSetup(dev)
-    writeImage(dev)
-    found = True
-
-if not found:
+    if dev:
+      print (f"Found {k} in display mode")
+      dev.set_configuration()
+      displayModeSetup(dev)
+      writeImage(dev)
+      return 1      
   print ("No supported devices found", file=sys.stderr)
-  sys.exit(-1)
+  return -1
+
+sys.exit(main())
