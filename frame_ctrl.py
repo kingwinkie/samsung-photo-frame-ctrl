@@ -22,7 +22,7 @@ def expect(result, verifyList):
     LOGGER.error(f"Warning: Expected  {verifyList}  but got {resultList}", file=sys.stderr)
 
 def storageToDisplay(dev):
-  print ("Setting device to display mode")
+  LOGGER.debug("Setting device to display mode")
   try:
     dev.ctrl_transfer(CTRL_TYPE_STANDARD | CTRL_IN | CTRL_RECIPIENT_DEVICE, 0x06, 0xfe, 0xfe, 254)
   except usb.core.USBError as e:
