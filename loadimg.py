@@ -146,7 +146,7 @@ class ImgLoaderURL(ImgLoader):
         imgFile = io.BytesIO()
         try:
             c = pycurl.Curl()
-            c.setopt(pycurl.TIMEOUT, 30)
+            c.setopt(c.TIMEOUT, 30)
             c.setopt(c.URL, self.url)
             c.setopt(c.WRITEDATA, imgFile)
             c.setopt(c.CAINFO, certifi.where())
