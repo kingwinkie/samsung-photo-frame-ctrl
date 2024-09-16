@@ -69,10 +69,11 @@ def writeImage(dev, content):
     pos += bufferSize
 
   
-def show(content, k, v):
+def show(content, model):
+  v=models[model]
   dev = usb.core.find(idVendor=vendorId, idProduct=v[0])
   if dev:
-    LOGGER.debug(f"Found {k} in storage mode")
+    LOGGER.debug(f"Found {model} in storage mode")
     storageToDisplay(dev)
     time.sleep(2)
     dev = None
@@ -80,7 +81,7 @@ def show(content, k, v):
     dev = usb.core.find(idVendor=vendorId, idProduct=v[1])
 
   if dev:
-    LOGGER.debug(f"Found {k} in display mode")
+    LOGGER.debug(f"Found {model} in display mode")
     if not dev.get_active_configuration():
       dev.set_configuration()
     displayModeSetup(dev)
@@ -93,10 +94,10 @@ def showImage(content):
   ret = -1
   if content:
     if hasattr(config,'MODEL') and config.MODEL:
-      ret = show(content, config.MODEL, models[config.MODEL])
+      ret = show(content, config.MODEL)
     else:
-      for k, v in models.items():
-        ret = show(content, k, v)
+      for model in models:
+        ret = show(content, model)
   if ret < 0:
     LOGGER.error("No supported devices found")
   return ret
