@@ -11,7 +11,17 @@ from usb.util import *
 # the image must be in 1024x600 JPEG format
 
 vendorId = 0x04e8
-models = {'SPF-87H': (0x2033, 0x2034), 'SPF-107H1': (0x2027, 0x2028), 'SPF-107H2': (0x2035, 0x2036) }
+models = {'SPF72H':(0x200a, 0x200b),
+  'SPF75H/76H':(0x200e, 0x200f),
+  'SPF83H':(0x200c, 0x200d),
+  'SPF85H/86H':(0x2012, 0x2013),
+  'SPF85P/86P':(0x2016, 0x2017),
+  'SPF87Hold':(0x2025, 0x2026),
+  'SPF105P':(0x201c, 0x201b),
+  'SPF107H':(0x2035, 0x2036),
+  'SPF700T':(0x204f, 0x2050),
+  'SPF107Hold':(0x2027, 0x2028) 
+  }
 
 chunkSize = 0x4000
 bufferSize = 0x20000
