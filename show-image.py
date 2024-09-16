@@ -16,6 +16,6 @@ def main():
     inBuffer = open(sys.argv[1],"rb")
 
   resized = resize.resize_and_center(inBuffer)
-  frame_ctrl.showImage(resized)
+  return frame_ctrl.showImage(resized)
 
 sys.exit(main())
