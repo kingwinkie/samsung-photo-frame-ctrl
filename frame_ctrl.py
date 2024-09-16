@@ -22,8 +22,8 @@ models = {
   'SPF87Hold':(0x2025, 0x2026), #old firmware
   'SPF105P':(0x201c, 0x201b),
   'SPF107H':(0x2035, 0x2036),
-  'SPF107Hold':(0x2027, 0x2028) #old firmware
-  'SPF700T':(0x204f, 0x2050),
+  'SPF107Hold':(0x2027, 0x2028), #old firmware
+  'SPF700T':(0x204f, 0x2050)
   }
 
 chunkSize = 0x4000
