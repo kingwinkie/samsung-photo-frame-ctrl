@@ -10,7 +10,7 @@ import usb.core
 from usb.util import *
 # the image must be in 1024x600 JPEG format
 
-vendorId = 0x04e8
+vendorId = 0x04e8 #Samsung
 models = {'SPF72H':(0x200a, 0x200b),
   'SPF75H/76H':(0x200e, 0x200f),
   'SPF83H':(0x200c, 0x200d),
