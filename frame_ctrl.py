@@ -89,9 +89,9 @@ def showImage(content):
       ret = showImageModel(content, config.MODEL)
     else:
       for model in models:
-        ret = show(content, model)
-  if ret < 0:
-    LOGGER.error("No supported devices found")
+        ret = showImageModel(content, model)
+    if ret < 0:
+      LOGGER.error("No supported devices found")
   return ret
 
 def main():
@@ -100,7 +100,7 @@ def main():
     inBuffer = sys.stdin
   else:
     inBuffer = open(sys.argv[1],"rb")
-  frame_ctrl.showImage(inBuffer)
+  return frame_ctrl.showImage(inBuffer)
 
 if __name__ == '__main__':
   LOGGER.basicConfig(level=config.LOGLEVEL)
