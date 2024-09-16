@@ -29,15 +29,10 @@ models = {
 chunkSize = 0x4000
 bufferSize = 0x20000
 
-def expect(result, verifyList):
-  resultList = result.tolist()
-  if resultList != verifyList:
-    LOGGER.error(f"Warning: Expected  {verifyList}  but got {resultList}", file=sys.stderr)
-
 def storageToDisplay(dev):
   LOGGER.debug("Setting device to display mode")
   try:
-    dev.ctrl_transfer(CTRL_TYPE_STANDARD | CTRL_IN | CTRL_RECIPIENT_DEVICE, 0x06, 0xfe, 0xfe, 254)
+    dev.ctrl_transfer(CTRL_TYPE_STANDARD | CTRL_IN | CTRL_RECIPIENT_DEVICE, 0x06, 0xfe, 0xfe, 0xfe)
   except usb.core.USBError as e:
     errorStr = str(e)
     if errorStr != 'No such device (it may have been disconnected)' and e.errno != 5: #switching command always disconnect the device. 5 = I/O Error. Seems to be generated during disconnect.
@@ -45,8 +40,9 @@ def storageToDisplay(dev):
 
 def displayModeSetup(dev):
   LOGGER.debug("Sending setup commands to device")
-  result = dev.ctrl_transfer(CTRL_TYPE_VENDOR | CTRL_IN | CTRL_RECIPIENT_DEVICE, 0x04, 0x00, 0x00, 1)
-  expect(result, [ 0x03 ])
+  result = dev.ctrl_transfer(CTRL_TYPE_VENDOR | CTRL_IN | CTRL_RECIPIENT_DEVICE, 0x04, 0x00, 0x00, 0x01)
+  if result != b'\x03':
+    LOGGER.error(f"Warning: Expected  {b'\x03'}  but got {result}")
 
 def paddedBytes(buf, size):
   diff = size - len(buf)
@@ -65,7 +61,7 @@ def writeImage(dev, content):
     buf = paddedBytes(content[pos:pos+bufferSize], bufferSize)
     chunkyWrite(dev, buf)
   
-def show(content, model):
+def showImageModel(content, model):
   v=models[model]
   dev = usb.core.find(idVendor=vendorId, idProduct=v[0])
   if dev:
@@ -79,10 +75,10 @@ def show(content, model):
   if dev:
     LOGGER.debug(f"Found {model} in display mode")
     if not dev.get_active_configuration():
-      dev.set_configuration()
+      dev.set_configuration() #lock the USB port
     displayModeSetup(dev)
     writeImage(dev, content)
-    usb.util.dispose_resources(dev)
+    usb.util.dispose_resources(dev) #release the USB port
     return 1      
   return -1
 
@@ -90,7 +86,7 @@ def showImage(content):
   ret = -1
   if content:
     if hasattr(config,'MODEL') and config.MODEL:
-      ret = show(content, config.MODEL)
+      ret = showImageModel(content, config.MODEL)
     else:
       for model in models:
         ret = show(content, model)
@@ -98,3 +94,14 @@ def showImage(content):
     LOGGER.error("No supported devices found")
   return ret
 
+def main():
+  inBuffer = None
+  if len(sys.argv) < 2 or sys.argv[1] == "-":
+    inBuffer = sys.stdin
+  else:
+    inBuffer = open(sys.argv[1],"rb")
+  frame_ctrl.showImage(inBuffer)
+
+if __name__ == '__main__':
+  LOGGER.basicConfig(level=config.LOGLEVEL)
+  sys.exit(main())
