@@ -13,7 +13,8 @@ from usb.util import *
 vendorId = 0x04e8 #Samsung
 
 #List of codes taken from here: https://github.com/MOA-2011/3rdparty-plugins/blob/f11349bc643ac9664276734897c6ab9a4e1d58ba/LCD4linux/src/Photoframe.py
-models = {'SPF72H':(0x200a, 0x200b),
+models = {
+  'SPF72H':(0x200a, 0x200b),
   'SPF75H/76H':(0x200e, 0x200f),
   'SPF83H':(0x200c, 0x200d),
   'SPF85H/86H':(0x2012, 0x2013),
@@ -21,8 +22,8 @@ models = {'SPF72H':(0x200a, 0x200b),
   'SPF87Hold':(0x2025, 0x2026),
   'SPF105P':(0x201c, 0x201b),
   'SPF107H':(0x2035, 0x2036),
-  'SPF700T':(0x204f, 0x2050),
   'SPF107Hold':(0x2027, 0x2028) 
+  'SPF700T':(0x204f, 0x2050),
   }
 
 chunkSize = 0x4000
@@ -52,22 +53,17 @@ def paddedBytes(buf, size):
   return buf + bytes(b'\x00') * diff
 
 def chunkyWrite(dev, buf):
-  pos = 0
-  while pos < bufferSize:
+  for pos in range(0, bufferSize, chunkSize):
     dev.write(0x02, buf[pos:pos+chunkSize])
-    pos += chunkSize
 
 def writeImage(dev, content):
   size = struct.pack('I', len(content))
   header = b'\xa5\x5a\x09\x04' + size + b'\x46\x00\x00\x00'
   content = header + content
 
-  pos = 0
-  while pos < len(content):
+  for pos in range(0, len(content), bufferSize):
     buf = paddedBytes(content[pos:pos+bufferSize], bufferSize)
     chunkyWrite(dev, buf)
-    pos += bufferSize
-
   
 def show(content, model):
   v=models[model]
