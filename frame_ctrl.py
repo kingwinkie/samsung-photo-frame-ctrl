@@ -40,7 +40,7 @@ def storageToDisplay(dev):
     dev.ctrl_transfer(CTRL_TYPE_STANDARD | CTRL_IN | CTRL_RECIPIENT_DEVICE, 0x06, 0xfe, 0xfe, 254)
   except usb.core.USBError as e:
     errorStr = str(e)
-    if errorStr != 'No such device (it may have been disconnected)' and e.errno != 5:
+    if errorStr != 'No such device (it may have been disconnected)' and e.errno != 5: #switching command always disconnect the device. 5 = I/O Error. Seems to be generated during disconnect.
       raise e
 
 def displayModeSetup(dev):
