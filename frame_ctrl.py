@@ -11,6 +11,8 @@ from usb.util import *
 # the image must be in 1024x600 JPEG format
 
 vendorId = 0x04e8 #Samsung
+
+#List of codes taken from here: https://github.com/MOA-2011/3rdparty-plugins/blob/f11349bc643ac9664276734897c6ab9a4e1d58ba/LCD4linux/src/Photoframe.py
 models = {'SPF72H':(0x200a, 0x200b),
   'SPF75H/76H':(0x200e, 0x200f),
   'SPF83H':(0x200c, 0x200d),
