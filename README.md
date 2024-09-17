@@ -22,8 +22,16 @@ Features
 Supported photo frames
 ----------------------
 
-* SPF-107H,SPF-107H2
-* SPF-87H
+* SPF72H
+* SPF75H/76H
+* SPF83H
+* SPF85H/86H
+* SPF85P/86P
+* SPF87H old
+* SPF105P
+* SPF107H
+* SPF107H old
+* SPF700T
 
 Dependencies
 ------------
