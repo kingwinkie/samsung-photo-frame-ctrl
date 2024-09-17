@@ -40,9 +40,10 @@ def storageToDisplay(dev):
 
 def displayModeSetup(dev):
   LOGGER.debug("Sending setup commands to device")
+  expected = b'\x03'
   result = dev.ctrl_transfer(CTRL_TYPE_VENDOR | CTRL_IN | CTRL_RECIPIENT_DEVICE, 0x04, 0x00, 0x00, 0x01)
-  if result != b'\x03':
-    LOGGER.error(f"Warning: Expected  {b'\x03'}  but got {result}")
+  if result != expected:
+    LOGGER.error(f"Warning: Expected  {expected}  but got {result}")
 
 def paddedBytes(buf, size):
   diff = size - len(buf)
