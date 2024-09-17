@@ -101,7 +101,7 @@ def main():
     inBuffer = sys.stdin
   else:
     inBuffer = open(sys.argv[1],"rb")
-  return frame_ctrl.showImage(inBuffer)
+  return showImage(inBuffer)
 
 if __name__ == '__main__':
   LOGGER.basicConfig(level=config.LOGLEVEL)
