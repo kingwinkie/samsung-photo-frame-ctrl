@@ -15,10 +15,16 @@ class SOURCE(Enum):
     URL = 2
 
 def show(imgLoader):
+    ret = False
     image = imgLoader.load()
     if image:
         resized = resize.resize_and_center(image)
-        frame_ctrl.showImage(resized)
+        while not ret:
+            ret = frame_ctrl.showImage(resized)
+            if not ret:
+                time.sleep(5) #the frame is not in monitor mode, has been disconnected etc.
+    return ret
+
 
 def slideShow(source=config.IMG_SOURCE, path=config.IMG_SOURCE_PATH, ext=config.IMG_EXT, delay=config.DELAY):
     if source == SOURCE.FOLDER.value:
@@ -29,8 +35,10 @@ def slideShow(source=config.IMG_SOURCE, path=config.IMG_SOURCE_PATH, ext=config.
         LOGGER.error(f"Incorrect Source ({source})")
         return
     while delay:
-      show(imgLoader)
-      time.sleep(delay)
+      if show(imgLoader): 
+        time.sleep(delay)
+      else:
+          time.sleep(15) #connection lost. Fast request
 
 
 def main():
@@ -38,7 +46,8 @@ def main():
         slideShow()
     except KeyboardInterrupt:
         LOGGER.info("Interrupted")
+    return 0 # success
 
 if __name__ == '__main__':
-  LOGGER.basicConfig(level=config.LOGLEVEL)
+  LOGGER.basicConfig(level=config.LOGLEVEL, format="%(asctime)s %(levelname)s:%(name)s:%(message)s")
   sys.exit(main())

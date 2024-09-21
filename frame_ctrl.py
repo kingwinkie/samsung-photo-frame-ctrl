@@ -8,6 +8,7 @@ import logging as LOGGER
 import config
 import usb.core
 from usb.util import *
+from array import array
 # the image must be in 1024x600 JPEG format
 
 vendorId = 0x04e8 #Samsung
@@ -39,7 +40,7 @@ def storageToDisplay(dev):
 
 def displayModeSetup(dev):
   LOGGER.debug("Sending setup commands to device")
-  expected = [b'\x03']
+  expected = array('B',[3])
   result = dev.ctrl_transfer(CTRL_TYPE_VENDOR | CTRL_IN | CTRL_RECIPIENT_DEVICE, 0x04, 0x00, 0x00, 0x01)
   if result != expected:
     LOGGER.error(f"Warning: Expected  {expected}  but got {result}")
@@ -79,18 +80,18 @@ def showImageModel(content, model):
     displayModeSetup(dev)
     writeImage(dev, content)
     usb.util.dispose_resources(dev) #release the USB port
-    return 1      
-  return -1
+    return True   
 
 def showImage(content):
-  ret = -1
+  ret = False
   if content:
     if hasattr(config,'MODEL') and config.MODEL:
       ret = showImageModel(content, config.MODEL)
     else:
       for model in models:
         ret = showImageModel(content, model)
-    if ret < 0:
+        if ret: return ret
+    if not ret:
       LOGGER.error("No supported devices found")
   return ret
 
@@ -99,9 +100,12 @@ def main():
   if len(sys.argv) < 2 or sys.argv[1] == "-":
     inBuffer = sys.stdin
   else:
-    inBuffer = open(sys.argv[1],"rb")
-  return showImage(inBuffer)
+    with  open(sys.argv[1],"rb") as file:
+      inBuffer = file.read()
+  ret = showImage(inBuffer)
+  if ret: return 0 #success
+  return 1 # failure
 
 if __name__ == '__main__':
-  LOGGER.basicConfig(level=config.LOGLEVEL)
+  LOGGER.basicConfig(level=config.LOGLEVEL, format="%(asctime)s %(levelname)s:%(name)s:%(message)s")
   sys.exit(main())
