@@ -132,4 +132,5 @@ dmypy.json
 .vscode
 
 deploy2booth.sh
+deploy2frame.sh
 data/
