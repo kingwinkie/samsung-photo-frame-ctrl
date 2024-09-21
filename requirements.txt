@@ -1,3 +1,4 @@
+pyusb
 pillow
 pycurl
 certifi
