@@ -34,13 +34,12 @@ def storageToDisplay(dev):
   try:
     dev.ctrl_transfer(CTRL_TYPE_STANDARD | CTRL_IN | CTRL_RECIPIENT_DEVICE, 0x06, 0xfe, 0xfe, 0xfe)
   except usb.core.USBError as e:
-    errorStr = str(e)
-    if errorStr != 'No such device (it may have been disconnected)' and e.errno != 5: #switching command always disconnect the device. 5 = I/O Error. Seems to be generated during disconnect.
+    if e.errno not in [5,19]: #switching command always disconnect the device. 5 = I/O Error. Seems to be generated during disconnect. 19 = No such device
       raise e
 
 def displayModeSetup(dev):
   LOGGER.debug("Sending setup commands to device")
-  expected = b'\x03'
+  expected = [b'\x03']
   result = dev.ctrl_transfer(CTRL_TYPE_VENDOR | CTRL_IN | CTRL_RECIPIENT_DEVICE, 0x04, 0x00, 0x00, 0x01)
   if result != expected:
     LOGGER.error(f"Warning: Expected  {expected}  but got {result}")
