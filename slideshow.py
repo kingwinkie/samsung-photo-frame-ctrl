@@ -1,4 +1,4 @@
-#!python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import frame_ctrl
@@ -9,8 +9,6 @@ import resize
 import time
 from enum import Enum
 from loadimg import ImgLoaderURL, ImgLoaderFolder
-LOGGER.basicConfig(level=config.LOGLEVEL)
-
 
 class SOURCE(Enum):
     FOLDER = 1,
@@ -22,7 +20,7 @@ def show(imgLoader):
         resized = resize.resize_and_center(image)
         frame_ctrl.showImage(resized)
 
-def main(source=config.IMG_SOURCE, path=config.IMG_SOURCE_PATH, ext=config.IMG_EXT, delay=config.DELAY):
+def slideShow(source=config.IMG_SOURCE, path=config.IMG_SOURCE_PATH, ext=config.IMG_EXT, delay=config.DELAY):
     if source == SOURCE.FOLDER.value:
         imgLoader = ImgLoaderFolder(path, ext)
     elif source == SOURCE.URL.value:
@@ -34,4 +32,13 @@ def main(source=config.IMG_SOURCE, path=config.IMG_SOURCE_PATH, ext=config.IMG_E
       show(imgLoader)
       time.sleep(delay)
 
-main()
+
+def main():
+    try:
+        slideShow()
+    except KeyboardInterrupt:
+        LOGGER.info("Interrupted")
+
+if __name__ == '__main__':
+  LOGGER.basicConfig(level=config.LOGLEVEL)
+  sys.exit(main())

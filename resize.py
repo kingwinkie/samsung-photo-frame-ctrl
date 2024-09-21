@@ -4,9 +4,10 @@ import io
 def resize_and_center(inStream):
     # Open the image
     with Image.open(inStream) as img:
+        target_width, target_height = config.IMG_SIZE
+
         # Calculate the aspect ratio of the image
         img_ratio = img.width / img.height
-        target_width, target_height = config.IMG_SIZE
         target_ratio = target_width / target_height
 
         # Determine new dimensions and position for the image
@@ -34,7 +35,7 @@ def resize_and_center(inStream):
 
         # Save the final image
         b=io.BytesIO()
-        new_img.save(b,"JPEG")
+        new_img.save(b, "JPEG", quality=94)
         # return new_img.tobytes("jpeg","RGB")
         # new_img.save(output_path)
         return b.getbuffer()

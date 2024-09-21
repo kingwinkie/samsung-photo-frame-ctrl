@@ -1,55 +1,66 @@
-Samsung photo frame control
+Samsung photo frame control with download ability for Raspberry Zero
 =================
 
-A small Python application for controlling Samsung photo frames.
+Slightly modified version of [Gekkio/samsung-photo-frame-ctrl](https://github.com/Gekkio/samsung-photo-frame-ctrl)
+Intended use is to use Raspberry Zero W in combination with Samsung photo frame to show photos downloaded from the internet.
 
-Based on the work of [Grace Woo & others](http://web.media.mit.edu/~gracewoo/stuff/picframe/). One large difference is that my application adds an extra control message that prevents the photo frame from exiting mini display mode.
+The main differences are:
+* Added support for second version (firmware 10.08) of SPF-107H.
+* Implemented logging
+* Added downloading with Curl (Pycurl)
+* Added reading from a local folder
+* Added PIL for manipulating with pictures
+* Added config.py for additional settings
 
 Features
 --------
+* The behavior can be configured via config.py
+  
+* frame_ctrl.py
+  * If the photo frame is in mass storage mode, the program will change it into mini display mode.
+  * If the photo frame is in mini display mode, the program will send the jpeg that was specified as the program argument to the photo frame. *The JPEG must be prescaled to the exactly correct size!*
+    
+* show-image.py
+  * Resize and center the image specified as the program argument and call frame_ctrl to show the image
+ 
+* slideshow.py
+  * In mode IMG_SOURCE = 1 (FOLDER) shows images from folder defined in IMG_SOURCE_PATH in random order
+  * In mode IMG_SOURCE = 2 (URL) downloads images from URL defined in IMG_SOURCE_PATH
 
-* If a photo frame is in mass storage mode, the program will change it into mini display mode.
-* If a photo frame is in mini display mode, the program will send the jpeg that was specified as the program argument to the photo frame. *The JPEG must be prescaled to the exactly correct size!*
-* window-in-frame.sh which shows a user selected application window in the photo frame (needs Imagemagick!)
 
 Supported photo frames
 ----------------------
 
-* SPF-107H (not tested)
-* SPF-87H
-* (In theory) Other similar Samsung photo frames should work once their product IDs are added into the code
+* SPF72H
+* SPF75H/76H
+* SPF83H
+* SPF85H/86H
+* SPF85P/86P
+* SPF87H old
+* SPF105P
+* SPF107H
+* SPF107H old
+* SPF700T
 
 Dependencies
 ------------
 
-* [pyusb 1.0](http://sourceforge.net/apps/mediawiki/pyusb) (This is an alpha quality library so it is *not* the one usually packaged in linux distributions. For example, the normal Ubuntu version of python-usb won't work!). **Update:** [Experimental Ubuntu PPA packages for Lucid/Maverick/Natty](http://launchpad.net/~gekkio/+archive/pyusb)
+* pyusb
+* pillow
+* pycurl
+* certifi
 
 Usage
 -----
 
-### Show JPEG image with the exactly correct size in photo frame
+`sudo python3 ./slideshow.py`
 
-`sudo ./frame-ctrl.py my_correctly_scaled_image.jpg`
-
-or
-
-`cat my_correctly_scaled_image.jpg | sudo ./frame-ctrl.py`
-
-### Automatically scale an image and show it in the photo frame (needs Imagemagick). _Replace 800x480 with the correct resolution for your device_
-
-`cat some_image_supported_by_imagemagick | convert - -resize 800x480 - | montage - -background black -geometry 800x480 jpeg:- | sudo ./frame-ctrl.py`
-
-### Show an application window in photo frame (needs Imagemagick). _Replace 800x480 in window-in-frame.sh with the correct resolution for your device_
-
-`sudo ./window-in-frame.sh` and click on an application window to select it
-
-FAQ
----
-
-### Can I use my photo frame as a mini monitor in Linux?
-
-Nope. In theory it's possible but it would require an X driver that would repeatedly compress frames into JPEG format and send them to the photo frame. This is exactly what the Frame Manager software does in Windows.
-
-### Why do I need to use sudo?
-
-libusb needs direct access to the usb device and unless you have set up permissions explicitly, you won't have access to the raw usb devices.
+On Raspberry Pi Zero W
+-----
+* Install the latest 64bit Raspbian Lite, boot your RPi:
+* `mkdir /home/pi/frame`
+* `sudo apt install python3 pip git`
+* `python3 -m venv /home/pi/frame/.venv`
+* `git clone https://github.com/bero158/samsung-photo-frame-ctrl /home/pi/frame/samsung-photo-frame-ctrl`
+* try `/home/pi/frame/.venv/bin/python3 /home/pi/frame/samsung-photo-frame-ctrl/slideshow.py > /home/pi/frame/log.txt 2> /home/pi/frame/err.txt`
+* add `/home/pi/frame/.venv/bin/python3 /home/pi/frame/samsung-photo-frame-ctrl/slideshow.py > /home/pi/frame/log.txt 2> /home/pi/frame/err.txt &` to /etc/rc.local before 'exit 0' row
