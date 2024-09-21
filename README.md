@@ -62,5 +62,5 @@ On Raspberry Pi Zero W
 * `sudo apt install python3 pip git`
 * `python3 -m venv /home/pi/frame/.venv`
 * `git clone https://github.com/bero158/samsung-photo-frame-ctrl /home/pi/frame/samsung-photo-frame-ctrl`
-* try `/home/pi/frame/.venv/bin/python3 /home/pi/frame/samsung-photo-frame-ctrl/slideshow.py > /home/pi/frame/log.txt 2> /home/pi/frame/err.txt`
-* add `/home/pi/frame/.venv/bin/python3 /home/pi/frame/samsung-photo-frame-ctrl/slideshow.py > /home/pi/frame/log.txt 2> /home/pi/frame/err.txt &` to /etc/rc.local before 'exit 0' row
+* try `/home/pi/frame/.venv/bin/python3 /home/pi/frame/samsung-photo-frame-ctrl/slideshow.py`
+* add `/home/pi/frame/.venv/bin/python3 /home/pi/frame/samsung-photo-frame-ctrl/slideshow.py &` to /etc/rc.local before 'exit 0' row
