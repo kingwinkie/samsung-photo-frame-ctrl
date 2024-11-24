@@ -2,7 +2,7 @@ Samsung photo frame control with download ability for Raspberry Zero
 =================
 
 Slightly modified version of [Gekkio/samsung-photo-frame-ctrl](https://github.com/Gekkio/samsung-photo-frame-ctrl)
-Intended use is to use Raspberry Zero W in combination with Samsung photo frame to show photos downloaded from the internet.
+The intended use is to use Raspberry Pi Zero W in combination with Samsung photo frame to show photos downloaded from the Internet.
 
 The main differences are:
 * Added support for second version (firmware 10.08) of SPF-107H.
@@ -62,5 +62,5 @@ On Raspberry Pi Zero W
 * `sudo apt install python3 pip git`
 * `python3 -m venv /home/pi/frame/.venv`
 * `git clone https://github.com/bero158/samsung-photo-frame-ctrl /home/pi/frame/samsung-photo-frame-ctrl`
-* try `/home/pi/frame/.venv/bin/python3 /home/pi/frame/samsung-photo-frame-ctrl/slideshow.py > /home/pi/frame/log.txt 2> /home/pi/frame/err.txt`
-* add `/home/pi/frame/.venv/bin/python3 /home/pi/frame/samsung-photo-frame-ctrl/slideshow.py > /home/pi/frame/log.txt 2> /home/pi/frame/err.txt &` to /etc/rc.local before 'exit 0' row
+* try `/home/pi/frame/.venv/bin/python3 /home/pi/frame/samsung-photo-frame-ctrl/slideshow.py`
+* add `/home/pi/frame/.venv/bin/python3 /home/pi/frame/samsung-photo-frame-ctrl/slideshow.py &` to /etc/rc.local before 'exit 0' row
