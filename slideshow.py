@@ -41,11 +41,12 @@ def show(imgLoader):
                     color : tuple = ledImage.getpixel((0, y))
                     ledSender.addQueue((ledConfig.LED_LEFT.stop - y - 1, calcColor(color, ledConfig.LED_BRIGHTNESS_LIMIT)))
                     
-        buffer : bytes = resize.imgToBytes(resizedImg)
-        while not ret:
-            ret = frame_ctrl.showImage(buffer)
-            if not ret:
-                time.sleep(5) #the frame is not in monitor mode, has been disconnected etc.
+            buffer : bytes = resize.imgToBytes(resizedImg)
+            if buffer:
+                while not ret:
+                    ret = frame_ctrl.showImage(buffer)
+                    if not ret:
+                        time.sleep(5) #the frame is not in monitor mode, has been disconnected etc.
     return ret
 
 
