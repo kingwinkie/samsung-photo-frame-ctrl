@@ -24,8 +24,7 @@ gamma8 = (
   215,218,220,223,225,228,231,233,236,239,241,244,247,249,252,255)
 
 def calcColor(color : tuple, brightness : int):
-    # brightness = gamma8[brightness]
-    return (color[0] * brightness // 255, color[1] * brightness // 255, color[2] * brightness // 255)
+    return (gamma8[color[0]] * brightness // 255, gamma8[color[1]] * brightness // 255, gamma8[color[2]] * brightness // 255)
 
 
 class Sender:
