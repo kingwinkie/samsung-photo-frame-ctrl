@@ -1,7 +1,7 @@
 import config
 from PIL import Image
 import io
-def resize_and_center(inStream):
+def resize_and_center(inStream : bytes) -> Image:
     # Open the image
     with Image.open(inStream) as img:
         target_width, target_height = config.IMG_SIZE
@@ -33,10 +33,13 @@ def resize_and_center(inStream):
         # Paste the resized image onto the new image
         new_img.paste(resized_img, (paste_x, paste_y))
 
-        # Save the final image
-        b=io.BytesIO()
-        new_img.save(b, "JPEG", quality=94)
-        # return new_img.tobytes("jpeg","RGB")
-        # new_img.save(output_path)
-        return b.getbuffer()
+        return new_img
+    
+def imgToBytes(img : Image) -> bytes:
+    # Save the final image
+    b=io.BytesIO()
+    img.save(b, "JPEG", quality=94)
+    # return new_img.tobytes("jpeg","RGB")
+    # new_img.save(output_path)
+    return b.getbuffer()
 

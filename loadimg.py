@@ -135,7 +135,7 @@ class ImgLoaderURL(ImgLoader):
         self.loaderFile = LoaderFile()
         self.lastDownloadAttempt = 0
 
-    def download(self):
+    def download(self) -> io.BytesIO:
         now = time.time()
         delta = now - self.lastDownloadAttempt
         if delta < config.HTTP_DOWNLOAD_LIMIT: # don't spam the server too often

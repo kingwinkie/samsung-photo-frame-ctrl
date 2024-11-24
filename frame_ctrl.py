@@ -53,7 +53,7 @@ def chunkyWrite(dev, buf):
   for pos in range(0, bufferSize, chunkSize):
     dev.write(0x02, buf[pos:pos+chunkSize])
 
-def writeImage(dev, content):
+def writeImage(dev, content : bytes):
   size = struct.pack('I', len(content))
   header = b'\xa5\x5a\x09\x04' + size + b'\x46\x00\x00\x00'
   content = header + content
