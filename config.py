@@ -3,6 +3,7 @@
 LOGLEVEL = 'DEBUG'
 IMG_SIZE = (1024, 600)
 MODEL = None
+LEDSTRIP_ENABLED = True
 #MODEL='SPF-107H2' #frame model or None fro autodetect
 
 # IMG_SOURCE_PATH = "data" # for IMG_SOURCE = FOLDER

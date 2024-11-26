@@ -68,7 +68,7 @@ class ImgLoaderRandom(ImgLoader):
 
 class LoaderFile(): # takes random file from a folder
         
-    def loadFile(self, imgPath):
+    def loadFile(self, imgPath) :
         picture = None
         if not imgPath:
             return None

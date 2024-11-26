@@ -18,35 +18,43 @@ class SOURCE(Enum):
     FOLDER = 1,
     URL = 2
 
+def ledstrip(img : Image):
+    width = len(ledConfig.LED_TOP)
+    height = len(ledConfig.LED_RIGHT)
+    ledImage : Image.Image = img.resize((width, height))
+    if ledImage:
+        for x in range(width): 
+            color : tuple = ledImage.getpixel((ledConfig.LED_TOP.start + x, 0))
+            ledSender.addQueue((x,calcColor(color, ledConfig.LED_BRIGHTNESS_LIMIT)))
+            color : tuple = ledImage.getpixel((x, height - 1))
+            ledSender.addQueue((ledConfig.LED_BOTTOM.stop - x - 1, calcColor(color, ledConfig.LED_BRIGHTNESS_LIMIT)))
+        for y in range(height):
+            color : tuple = ledImage.getpixel((width - 1, y))
+            ledSender.addQueue((ledConfig.LED_RIGHT.start + y, calcColor(color, ledConfig.LED_BRIGHTNESS_LIMIT)))
+            color : tuple = ledImage.getpixel((0, y))
+            ledSender.addQueue((ledConfig.LED_LEFT.stop - y - 1, calcColor(color, ledConfig.LED_BRIGHTNESS_LIMIT)))
+                
+
+def sendToFrame(img : Image):
+    ret : bool = False
+    buffer : bytes = resize.imgToBytes(img)
+    if buffer:
+        while not ret:
+            ret = frame_ctrl.showImage(buffer)
+            if not ret:
+                time.sleep(5) #the frame is not in monitor mode, has been disconnected etc.
+    return ret
+
+
 def show(imgLoader):
-    ret = False
-    image = imgLoader.load()
-    if image:
-        resizedImg = resize.resize_and_center(image)
+    ret : bool = False
+    buffer : bytes = imgLoader.load()
+    if buffer:
+        resizedImg = resize.resize_and_center(buffer)
         if resizedImg:
-            width = len(ledConfig.LED_TOP)
-            height = len(ledConfig.LED_RIGHT)
-            ledImage : Image.Image = resizedImg.resize((width, height))
-            if ledImage:
-                for x in range(width): 
-                    color : tuple = ledImage.getpixel((ledConfig.LED_TOP.start + x, 0))
-                    ledSender.addQueue((x,calcColor(color, ledConfig.LED_BRIGHTNESS_LIMIT)))
-                for x in range(width):
-                    color : tuple = ledImage.getpixel((x, height - 1))
-                    ledSender.addQueue((ledConfig.LED_BOTTOM.stop - x - 1, calcColor(color, ledConfig.LED_BRIGHTNESS_LIMIT)))
-                for y in range(height):
-                    color : tuple = ledImage.getpixel((width - 1, y))
-                    ledSender.addQueue((ledConfig.LED_RIGHT.start + y, calcColor(color, ledConfig.LED_BRIGHTNESS_LIMIT)))
-                for y in range(height):
-                    color : tuple = ledImage.getpixel((0, y))
-                    ledSender.addQueue((ledConfig.LED_LEFT.stop - y - 1, calcColor(color, ledConfig.LED_BRIGHTNESS_LIMIT)))
-                    
-            buffer : bytes = resize.imgToBytes(resizedImg)
-            if buffer:
-                while not ret:
-                    ret = frame_ctrl.showImage(buffer)
-                    if not ret:
-                        time.sleep(5) #the frame is not in monitor mode, has been disconnected etc.
+            ret = sendToFrame(resizedImg)
+            if ret and config.LEDSTRIP_ENABLED:
+                ledstrip(resizedImg)
     return ret
 
 
