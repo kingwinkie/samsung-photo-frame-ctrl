@@ -2,3 +2,5 @@ pyusb
 pillow
 pycurl
 certifi
+argparse
+netifaces
