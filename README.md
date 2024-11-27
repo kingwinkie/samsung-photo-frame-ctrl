@@ -11,6 +11,9 @@ The main differences are:
 * Added reading from a local folder
 * Added PIL for manipulating with pictures
 * Added config.py for additional settings
+* Added simple gallery with download or local folder option
+* Added support for Neopixel Led strip as background ambient light
+* Implemented CLI
 
 Features
 --------
@@ -22,10 +25,15 @@ Features
     
 * show-image.py
   * Resize and center the image specified as the program argument and call frame_ctrl to show the image
+  * Can show text over the image
  
 * slideshow.py
   * In mode IMG_SOURCE = 1 (FOLDER) shows images from folder defined in IMG_SOURCE_PATH in random order
   * In mode IMG_SOURCE = 2 (URL) downloads images from URL defined in IMG_SOURCE_PATH
+
+* txt2img.py 
+  * Converts text to image. Output can be piped to show-image.py
+
 
 
 Supported photo frames
