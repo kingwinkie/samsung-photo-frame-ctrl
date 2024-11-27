@@ -37,6 +37,7 @@ def resize_and_center(file,**kwargs) -> Image.Image:
     new_img : Image.Image = None
     try:
         # Open the image
+        Image.open
         with Image.open(file) as img:
             return resize_and_centerImg(img, **kwargs)
     except UnidentifiedImageError:

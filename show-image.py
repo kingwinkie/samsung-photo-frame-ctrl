@@ -20,8 +20,11 @@ def main():
    parser.add_argument('-t','--text', help="Reads text from stdin")
    parser.add_argument('-ti','--textinput', help="Input text file. '-' reads text from stdin")
    parser.add_argument('-v', '--verbose', action='store_true') 
-   parser.add_argument('-b', '--backcolor', help="Back color (black, white etc.)", type=ImageColor.colormap.get)
-   parser.add_argument('-t', '--textcolor', help="Text color", default='white', type=ImageColor.colormap.get)
+   parser.add_argument('-bc', '--backcolor', help="Back color (black, white etc.)", type=ImageColor.colormap.get)
+   parser.add_argument('-tc', '--textcolor', help="Text color", default='white', type=ImageColor.colormap.get)
+   parser.add_argument('-pw', '--pwidth', help="Picture Width", default=config.IMG_SIZE[0], type=int)
+   parser.add_argument('-ph', '--pheight', help="Picture Height", default=config.IMG_SIZE[1], type=int)
+  
     
    args = parser.parse_args()
    logLevel : LOGGER = LOGGER.DEBUG if args.verbose else LOGGER.ERROR
@@ -29,7 +32,7 @@ def main():
    LOGGER.info("Starting")
    size = (int(args.pwidth),int(args.pheight))
    backcolor : str = args.backcolor if args.backcolor else 'black' #set default color
-   if args.bgimage:
+   if args.input:
       backcolor = (*ImageColor.getrgb(backcolor),128) if backcolor else (0, 0, 0, 0) #half transparency if backcolor is set. Othervise full transparency
 
    show : Image = None
@@ -41,8 +44,8 @@ def main():
      LOGGER.debug(f"Creating Image from text {args.textinput}")
      # create the image from the text
      txtImg : Image = txt2img.createImage(text=args.textinput,size=size)
-     if args.bgimage:
-      txt2img.addBgImage(txtImg, args.bgimage)
+     if args.input:
+      txt2img.addBgImage(txtImg, args.input)
      show = resize.resize_and_centerImg(txtImg)
    elif args.text:
      # create the image from text from stdin
@@ -54,8 +57,7 @@ def main():
      show = resize.resize_and_centerImg(txtImg)
    else:
       LOGGER.debug("Reading image from stdin")
-      inBuffer = sys.stdin
-      show = resize.resize_and_center(inBuffer)
+      show = resize.resize_and_center(sys.stdin.buffer)
    return frame_ctrl.showImage(show)
 
 if (__name__ == "__main__"):

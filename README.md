@@ -63,6 +63,9 @@ Usage
 
 `sudo python3 ./slideshow.py`
 
+Show IP address(es) with background image:
+`python getips.py | python txt2img.py -bi res\wifibg.jpg -o - | python show-image.py`
+
 On Raspberry Pi Zero W
 -----
 * Install the latest 64bit Raspbian Lite, boot your RPi:

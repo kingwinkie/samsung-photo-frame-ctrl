@@ -58,8 +58,8 @@ def main():
     parser.add_argument('-fp', '--fontpath', help="Path to TTF or OTF font")
     parser.add_argument('-pw', '--pwidth', help="Picture Width", default=config.IMG_SIZE[0], type=int)
     parser.add_argument('-ph', '--pheight', help="Picture Height", default=config.IMG_SIZE[1], type=int)
-    parser.add_argument('-b', '--backcolor', help="Back color (black, white etc.)", type=ImageColor.colormap.get)
-    parser.add_argument('-t', '--textcolor', help="Text color", default='white', type=ImageColor.colormap.get)
+    parser.add_argument('-bc', '--backcolor', help="Back color (black, white etc.)", type=ImageColor.colormap.get)
+    parser.add_argument('-tc', '--textcolor', help="Text color", default='white', type=ImageColor.colormap.get)
     parser.add_argument('-s', '--show', action='store_true', help="Show Image")
     parser.add_argument('-v', '--verbose', action='store_true') 
     
@@ -93,7 +93,7 @@ def main():
         if args.output:
             if args.output == '-':
                 LOGGER.debug(f"Writing to stdout")
-                img.save(sys.stdout, "JPG", quality=94)
+                img.save(sys.stdout, "JPEG", quality=94)
             else:
                 LOGGER.debug(f"Writing to {args.output}")
                 img.convert(mode="RGB").save(args.output)
