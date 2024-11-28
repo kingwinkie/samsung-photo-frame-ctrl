@@ -100,9 +100,7 @@ def main():
         if args.show:
             LOGGER.debug(f"Showing Image")
             showImage(img)
-            LOGGER.info(f"Press Enter")
-            input()
-
+            
     LOGGER.info("End")
     
 
