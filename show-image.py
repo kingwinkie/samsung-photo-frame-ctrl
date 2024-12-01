@@ -58,7 +58,7 @@ def main():
    else:
       LOGGER.debug("Reading image from stdin")
       show = resize.resize_and_center(sys.stdin.buffer)
-   return frame_ctrl.showImage(show)
+   return frame_ctrl.showImage(resize.imgToBytes(show))
 
 if (__name__ == "__main__"):
    main()

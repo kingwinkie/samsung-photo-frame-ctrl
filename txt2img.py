@@ -15,9 +15,15 @@ def createImage(text : str, size : tuple[int,int] = config.IMG_SIZE, fontSize : 
     draw = ImageDraw.Draw(image)
 
     if fontPath:
+        LOGGER.debug(f"Creating font {fontPath} {fontSize}")
         font = ImageFont.truetype(fontPath, size=fontSize)
+        if font:
+            LOGGER.debug(f"Font created")
     else:
         font = ImageFont.load_default(fontSize)
+        if font:
+            LOGGER.debug(f"Default font loaded {fontSize}")
+    LOGGER.info(f"Font: {font.getname()} size:{font.size}")
     
     # Calculate the bounding box of the text to be added
     bbox = draw.textbbox((0, 0), text, font=font)
@@ -61,7 +67,7 @@ def main():
     parser.add_argument('-bc', '--backcolor', help="Back color (black, white etc.)", type=ImageColor.colormap.get)
     parser.add_argument('-tc', '--textcolor', help="Text color", default='white', type=ImageColor.colormap.get)
     parser.add_argument('-s', '--show', action='store_true', help="Show Image")
-    parser.add_argument('-v', '--verbose', action='store_true') 
+    parser.add_argument('-v', '--verbose', help="Show Info messages", action='store_true') 
     
     args = parser.parse_args()
     logLevel : LOGGER = LOGGER.DEBUG if args.verbose else LOGGER.ERROR
@@ -84,7 +90,7 @@ def main():
     if args.bgimage:
         backcolor = (*ImageColor.getrgb(backcolor),128) if backcolor else (0, 0, 0, 0) #half transparency if backcolor is set. Othervise full transparency
 
-    img : Image.Image = createImage(inputText, size, args.fontsize, backcolor , args.textcolor, args.fontpath)
+    img : Image.Image = createImage(text=inputText, size=size, fontSize=args.fontsize, backcolor=backcolor , textcolor=args.textcolor, fontPath=args.fontpath)
 
     if img:
         if args.bgimage:
@@ -93,7 +99,7 @@ def main():
         if args.output:
             if args.output == '-':
                 LOGGER.debug(f"Writing to stdout")
-                img.save(sys.stdout, "JPEG", quality=94)
+                img.convert(mode="RGB").save(sys.stdout, "JPEG", quality=94)
             else:
                 LOGGER.debug(f"Writing to {args.output}")
                 img.convert(mode="RGB").save(args.output)

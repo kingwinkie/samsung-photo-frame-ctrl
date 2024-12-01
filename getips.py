@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
+import argparse
 import os
+import logging as LOGGER
 try:
     import netifaces
 except ImportError:
@@ -35,8 +36,26 @@ def getIPStr(addrList : list = None, sep : str = ", "):
     return addrStr
 
 def main():
+    parser = argparse.ArgumentParser(exit_on_error=True,
+                    prog='getips',
+                    description='Returns IP adress(es) if format useful for txt2img',
+                    epilog="""
+                    """)
+
+    parser.add_argument('-th','--textheader', help="Header text")
+    parser.add_argument('-v', '--verbose', help="Show Info messages", action='store_true') 
+    
+    args = parser.parse_args()
+    logLevel : LOGGER = LOGGER.DEBUG if args.verbose else LOGGER.ERROR
+    LOGGER.basicConfig(level=logLevel)
+    LOGGER.info("Starting")
     IPs : str = getIPStr(sep=os.linesep)
-    print( IPs )
+    output : str = None
+    if args.textheader:
+        output = args.textheader + os.linesep + IPs
+    else:
+        output = IPs
+    print( output )
 
 if (__name__ == "__main__"):
     main()
