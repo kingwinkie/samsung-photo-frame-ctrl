@@ -1,0 +1,15 @@
+pip install --editable samsungframe
+pip install --editable samsungframe/plugins/ledstrip
+pip install --editable samsungframe/plugins/loadimgurl
+pip install --editable samsungframe/plugins/loadimgfolder
+
+on PI: 
+/home/pi/frame/.venv/bin/pip install --editable samsungframe
+/home/pi/frame/.venv/bin/pip install --editable samsungframe/plugins/ledstrip
+/home/pi/frame/.venv/bin/pip install --editable samsungframe/plugins/loadimgurl
+/home/pi/frame/.venv/bin/pip install --editable samsungframe/plugins/loadimgfolder
+
+uninstall:
+pip uninstall loadimgurl
+pip uninstall loadimgfolder
+pip uninstall ledstrip

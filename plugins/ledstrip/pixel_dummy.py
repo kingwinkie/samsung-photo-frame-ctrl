@@ -1,5 +1,5 @@
 # for testing on PC
-import neopixel.config as config
+import ledconfig as config
 import logging as LOGGER
 
 

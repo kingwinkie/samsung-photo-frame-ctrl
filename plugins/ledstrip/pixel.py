@@ -1,6 +1,6 @@
 
 import neopixel
-import config as config
+import ledconfig as config
 import logging as LOGGER
 
 closed = False

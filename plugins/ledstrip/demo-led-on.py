@@ -1,4 +1,4 @@
-import config as config 
+import ledconfig as config 
 import logging as LOGGER
 import time
 from led_effects import PrivilegedSender

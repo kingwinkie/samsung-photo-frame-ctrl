@@ -1,7 +1,7 @@
 # debuging
-# DUMMY = False
+#DUMMY = False
 DUMMY = True
-DEBUG = False
+DEBUG = True
 
 LOGLEVEL = 'DEBUG' if DEBUG else 'INFO'
 

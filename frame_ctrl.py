@@ -62,7 +62,7 @@ def writeImage(dev, content : bytes):
     buf = paddedBytes(content[pos:pos+bufferSize], bufferSize)
     chunkyWrite(dev, buf)
   
-def showImageModel(content, model):
+def showImageModel(content : bytes, model : str) -> bool:
   v=models[model]
   dev = usb.core.find(idVendor=vendorId, idProduct=v[0])
   if dev:
@@ -82,9 +82,10 @@ def showImageModel(content, model):
     usb.util.dispose_resources(dev) #release the USB port
     return True   
 
-def showImage(content):
+def showImage(content : bytes) -> bool:
   ret = False
   if content:
+    if config.DUMMY: return True # for testing without display
     if hasattr(config,'MODEL') and config.MODEL:
       ret = showImageModel(content, config.MODEL)
     else:

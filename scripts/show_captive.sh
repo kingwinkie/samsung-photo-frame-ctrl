@@ -1,7 +1,7 @@
 #!/bin/sh
 
 python=/home/pi/frame/.venv/bin/python
-app_root=/home/pi/frame/samsung-photo-frame-ctrl
+app_root=/home/pi/frame/samsungframe
 text="WiFi is unavailable
 
 Starting captive portal

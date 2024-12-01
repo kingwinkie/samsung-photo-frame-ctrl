@@ -1,8 +1,8 @@
-import neopixel.config as config 
+import ledconfig as config 
 import logging as LOGGER
 import time
-from neopixel.effects.led_effects import PrivilegedSender
-import neopixel.effects.led_effects as effects
+from led_effects import PrivilegedSender
+import led_effects as effects
 
 LOGGER.basicConfig(level=config.LOGLEVEL)
 

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import logging as LOGGER
-import config
+import ledconfig as config
 if config.DUMMY:
     import pixel_dummy as pixel
 else:

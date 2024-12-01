@@ -4,3 +4,4 @@ pycurl
 certifi
 argparse
 netifaces
+pluggy
