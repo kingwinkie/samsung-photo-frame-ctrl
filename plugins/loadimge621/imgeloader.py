@@ -4,9 +4,8 @@ import loadimg
 import pycurl
 import certifi
 import time
-import loadereconfig as loaderconfig
-import py621
 import loadereconfig
+import py621
 import random
 
 class ImgLoaderE621(loadimg.ImgLoader):
@@ -40,7 +39,7 @@ class ImgLoaderE621(loadimg.ImgLoader):
 
     def getURL(self) -> str:
         # Create an unsafe api instance
-        api_type = getattr(loaderconfig,"API")
+        api_type = getattr(loadereconfig,"API")
         api = py621.public.api(api_type)
         page : int = random.randint(0, self.pages)
 
@@ -68,8 +67,8 @@ class ImgLoaderE621(loadimg.ImgLoader):
     def waitUntilWeReSafe(self):
         now = time.time()
         delta = now - self.lastDownloadAttempt
-        if delta < loaderconfig.HTTP_DOWNLOAD_LIMIT: # don't spam the server too often
-            wait = loaderconfig.HTTP_DOWNLOAD_LIMIT - delta
+        if delta < loadereconfig.HTTP_DOWNLOAD_LIMIT: # don't spam the server too often
+            wait = loadereconfig.HTTP_DOWNLOAD_LIMIT - delta
             LOGGER.debug(f"slowdown {wait}")
             time.sleep(wait)
         self.lastDownloadAttempt = time.time()
