@@ -92,11 +92,14 @@ def ListToPost(List, api):
     ThisPost.tags.general = List["tags"]["general"]
     ThisPost.tags.species = List["tags"]["species"]
     ThisPost.tags.character = List["tags"]["character"]
-    ThisPost.tags.artist = List["tags"]["artist"]
+    if hasattr(List["tags"],"artist"):
+        ThisPost.tags.artist = List["tags"]["artist"]
     ThisPost.tags.invalid = List["tags"]["invalid"]
-    ThisPost.tags.lore = List["tags"]["lore"]
+    if hasattr(List["tags"],"lore"):
+        ThisPost.tags.lore = List["tags"]["lore"]
     ThisPost.tags.meta = List["tags"]["meta"]
-    ThisPost.tags.copyright = List["tags"]["copyright"]
+    if hasattr(List["tags"],"copyright"):
+        ThisPost.tags.copyright = List["tags"]["copyright"]
 
     ThisPost.locked_tags = List["locked_tags"]
     ThisPost.change_seq = List["change_seq"]

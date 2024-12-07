@@ -5,7 +5,7 @@ import pycurl
 import certifi
 import time
 import loadereconfig
-import py621
+import py621,py621.types
 import random
 
 class ImgLoaderE621(loadimg.ImgLoader):
@@ -39,7 +39,7 @@ class ImgLoaderE621(loadimg.ImgLoader):
 
     def getURL(self) -> str:
         # Create an unsafe api instance
-        api_type = getattr(loadereconfig,"API")
+        api_type = getattr(py621.types,loadereconfig.API)
         api = py621.public.api(api_type)
         page : int = random.randint(0, self.pages)
 
