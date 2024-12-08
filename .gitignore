@@ -134,3 +134,5 @@ dmypy.json
 deploy2booth.sh
 deploy2frame.sh
 data/
+# Ignore dynaconf secret files
+.secrets.*

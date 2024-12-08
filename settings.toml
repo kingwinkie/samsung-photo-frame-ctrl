@@ -1,0 +1,38 @@
+[FRAME]
+LOGLEVEL = "DEBUG"
+IMG_SIZE = [
+    1024,
+    600,
+]
+MODEL = ""
+DUMMY = true
+DELAY = 10
+PLUGINS_AVAILABLE = [
+    "ledstrip",
+    "loadimgfolder",
+    "loadimgurl",
+    "clocks",
+]
+PLUGINS_ACTIVE = [
+    "loadimge621",
+    "clocks",
+]
+
+[LOADIMGE621]
+API = "e621"
+TAGS = [
+    "status:active",
+    "ratio:>1.2",
+    "-my_little_pony",
+]
+HTTP_DOWNLOAD_LIMIT = 10
+PAGES = 700
+
+[CLOCKS]
+FORMAT = "24h"
+FILL = "white"
+
+[LOADIMGURL]
+IMG_SOURCE_PATH = "https://random.imagecdn.app/1024/600"
+HTTP_DOWNLOAD_LIMIT = 10
+DELAY = 10

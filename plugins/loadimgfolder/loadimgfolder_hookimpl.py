@@ -1,7 +1,9 @@
 import plugins
 from imgfolderloader import ImgLoaderFolder
 from loadimg import ImgLoader
-import loaderconfig
+
+
+PLUGIN_NAME = "LOADIMGFOLDER"
 
 @plugins.hookimpl
 def imageChangeAfter(app):
@@ -17,5 +19,18 @@ def exit(app):
 
 @plugins.hookimpl
 def imageLoader(app) -> ImgLoader:
-    imgLoader = ImgLoaderFolder(loaderconfig.IMG_SOURCE_PATH, imgExt=loaderconfig.IMG_EXT)
+    imgLoader = ImgLoaderFolder(app.cfg.LOADIMGFOLDER.IMG_SOURCE_PATH, imgExt=app.cfg.LOADIMGFOLDER.IMG_EXT)
     return imgLoader
+
+
+@plugins.hookimpl
+def loadCfg(app) -> None:
+    """called before startup
+    Placeholder for plugin default settings
+    Use app.loadCfg(PLUGIN_NAME, dict_with_config):
+    """
+    defaultConfig = {
+        "IMG_SOURCE_PATH" : "data",
+        "IMG_EXT" : "jpg", # folder filtering extension
+    }
+    app.loadCfg(PLUGIN_NAME, defaultConfig)
