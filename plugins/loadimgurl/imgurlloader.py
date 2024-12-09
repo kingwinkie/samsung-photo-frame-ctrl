@@ -42,7 +42,7 @@ class ImgLoaderURL(loadimg.ImgLoader):
         return imgFile
 
     
-    def load(self):
+    def load(self) -> bytes:
         image = self.download()
         return image
     
