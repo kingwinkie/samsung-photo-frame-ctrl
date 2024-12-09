@@ -1,8 +1,7 @@
-import config
 from PIL import Image, UnidentifiedImageError
 import io
 
-def resize_and_centerImg(img : Image.Image, targetSize : tuple[int,int]=config.IMG_SIZE, backcolor : str="black") -> Image.Image:
+def resize_and_centerImg(img : Image.Image, targetSize : tuple[int,int], backcolor : str="black") -> Image.Image:
     new_img : Image.Image = None
     try:
         # Calculate the aspect ratio of the image
@@ -32,14 +31,14 @@ def resize_and_centerImg(img : Image.Image, targetSize : tuple[int,int]=config.I
         pass
     return new_img
 
-def resize_and_center(file,**kwargs) -> Image.Image:
+def resize_and_center(file,targetSize : tuple[int,int],**kwargs) -> Image.Image:
     """file is filename or bytes or readbuffer (Python 3.9 on Pi can't process '|')"""
     new_img : Image.Image = None
     try:
         # Open the image
         Image.open
         with Image.open(file) as img:
-            return resize_and_centerImg(img, **kwargs)
+            return resize_and_centerImg(img,targetSize=targetSize, **kwargs)
     except UnidentifiedImageError:
         pass
     return new_img

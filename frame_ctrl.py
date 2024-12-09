@@ -5,7 +5,6 @@ import struct
 import sys
 import time
 import logging as LOGGER
-import config
 import usb.core
 from usb.util import *
 from array import array
@@ -82,12 +81,11 @@ def showImageModel(content : bytes, model : str) -> bool:
     usb.util.dispose_resources(dev) #release the USB port
     return True   
 
-def showImage(content : bytes) -> bool:
+def showImage(content : bytes, frameModel : str = None) -> bool:
   ret = False
   if content:
-    if config.DUMMY: return True # for testing without display
-    if hasattr(config,'MODEL') and config.MODEL:
-      ret = showImageModel(content, config.MODEL)
+    if frameModel:
+      ret = showImageModel(content, frameModel)
     else:
       for model in models:
         ret = showImageModel(content, model)

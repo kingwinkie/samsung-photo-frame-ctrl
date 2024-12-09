@@ -4,11 +4,17 @@
 import argparse
 from PIL import Image, ImageDraw, ImageFont, ImageColor
 import sys
-import config
 import logging as LOGGER
 import resize
+from os import path as osp
+from dynaconf import Dynaconf
+
+settings = Dynaconf(
+    envvar_prefix="FRAME",
+    settings_files=[osp.join(osp.realpath(osp.dirname(__file__)),'default.json'), 'settings.toml', '.secrets.toml', ],
+)
 # Create a blank image with white background
-def createImage(text : str, size : tuple[int,int] = config.IMG_SIZE, fontSize : int = 24,  backcolor : str = 'black', textcolor : str = 'white', fontPath : str = None) -> Image.Image:
+def createImage(text : str, size : tuple[int,int] = settings.FRAME.IMG_SIZE, fontSize : int = 24,  backcolor : str = 'black', textcolor : str = 'white', fontPath : str = None) -> Image.Image:
     image = Image.new('RGBA', size, backcolor)
 
     # Initialize the drawing context
@@ -18,6 +24,7 @@ def createImage(text : str, size : tuple[int,int] = config.IMG_SIZE, fontSize : 
         LOGGER.debug(f"Creating font {fontPath} {fontSize}")
         font = ImageFont.truetype(fontPath, size=fontSize)
         if font:
+             
             LOGGER.debug(f"Font created")
     else:
         font = ImageFont.load_default(fontSize)
@@ -35,7 +42,7 @@ def createImage(text : str, size : tuple[int,int] = config.IMG_SIZE, fontSize : 
     return image
 
     
-def addBgImage(img : Image.Image, bgImage : str, size = config.IMG_SIZE, backcolor : str = "black"):
+def addBgImage(img : Image.Image, bgImage : str, size = settings.FRAME.IMG_SIZE, backcolor : str = "black"):
     bgImg : Image.Image = resize.resize_and_center(bgImage, targetSize=size, backcolor=backcolor)
     if bgImg:
         bgImg.paste(img, mask=img)
@@ -62,8 +69,8 @@ def main():
     parser.add_argument('-o', '--output', help="Output image file. If - stdout is used") 
     parser.add_argument('-fs', '--fontsize', help="Font size", default=24, type=int)
     parser.add_argument('-fp', '--fontpath', help="Path to TTF or OTF font")
-    parser.add_argument('-pw', '--pwidth', help="Picture Width", default=config.IMG_SIZE[0], type=int)
-    parser.add_argument('-ph', '--pheight', help="Picture Height", default=config.IMG_SIZE[1], type=int)
+    parser.add_argument('-pw', '--pwidth', help="Picture Width", default=settings.FRAME.IMG_SIZE[0], type=int)
+    parser.add_argument('-ph', '--pheight', help="Picture Height", default=settings.FRAME.IMG_SIZE[1], type=int)
     parser.add_argument('-bc', '--backcolor', help="Back color (black, white etc.)", type=ImageColor.colormap.get)
     parser.add_argument('-tc', '--textcolor', help="Text color", default='white', type=ImageColor.colormap.get)
     parser.add_argument('-s', '--show', action='store_true', help="Show Image")
@@ -72,7 +79,7 @@ def main():
     args = parser.parse_args()
     logLevel : LOGGER = LOGGER.DEBUG if args.verbose else LOGGER.ERROR
     size = (int(args.pwidth),int(args.pheight))
-    LOGGER.basicConfig(level=logLevel)
+    LOGGER.basicConfig(level=logLevel, format="%(asctime)s %(levelname)s:%(name)s:%(message)s")
     LOGGER.info("Starting")
     inputText : str = ""
     if args.input:
@@ -111,4 +118,5 @@ def main():
     
 
 if (__name__ == "__main__"):
+    
     main()

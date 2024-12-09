@@ -1,9 +1,9 @@
 import plugins
 from imgfolderloader import ImgLoaderFolder
 from loadimg import ImgLoader
-import loaderconfig
-from loadimg import ImgLoader
-import slideshow
+
+
+PLUGIN_NAME = "LOADIMGFOLDER"
 
 @plugins.hookimpl
 def showImage(app : slideshow.SlideShow) -> bool:
@@ -30,29 +30,19 @@ def exit(app : slideshow.SlideShow) -> None:
     """
 
 @plugins.hookimpl
-def imageLoader(app : slideshow.SlideShow) -> ImgLoader:
-    """called when a new image is required
-    Returns ImgLoader desc. object.
-    """
-    
+def imageLoader(app) -> ImgLoader:
+    imgLoader = ImgLoaderFolder(app.cfg.LOADIMGFOLDER.IMG_SOURCE_PATH, imgExt=app.cfg.LOADIMGFOLDER.IMG_EXT)
+    return imgLoader
 
 
 @plugins.hookimpl
-def loadImage(app : slideshow.SlideShow) -> bytes:
-    """called when a new image is required
-    Returns bytes
+def loadCfg(app) -> None:
+    """called before startup
+    Placeholder for plugin default settings
+    Use app.loadCfg(PLUGIN_NAME, dict_with_config):
     """
-    if hasattr(app, "imgLoaderFolder") and app.imgLoaderFolder:
-        return app.imgLoaderFolder.load()
-
-@plugins.hookimpl
-def imageChangeBegore(app : slideshow.SlideShow):
-    """called before a new image is required
-    Returns ImgLoader desc. object.
-    """
-
-@plugins.hookimpl
-def showImage(app : slideshow.SlideShow) -> bool:
-    """called when a new image should be shown. Intended use is for display plugins. Returns success or failure.
-    """
-    
+    defaultConfig = {
+        "IMG_SOURCE_PATH" : "data",
+        "IMG_EXT" : "jpg", # folder filtering extension
+    }
+    app.loadCfg(PLUGIN_NAME, defaultConfig)

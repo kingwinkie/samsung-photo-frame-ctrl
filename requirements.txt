@@ -5,5 +5,5 @@ certifi
 argparse
 netifaces
 pluggy
-streamlit
 pygame
+dynaconf

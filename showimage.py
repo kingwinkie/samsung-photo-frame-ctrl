@@ -7,8 +7,14 @@ import logging as LOGGER
 import resize
 import argparse
 import txt2img
-import config
+from os import path as osp
+from dynaconf import Dynaconf
 from PIL import Image, ImageColor
+
+settings = Dynaconf(
+    envvar_prefix="FRAME",
+    settings_files=[osp.join(osp.realpath(osp.dirname(__file__)),'default.json'), 'settings.toml', '.secrets.toml', ],
+)
 def main():
    parser = argparse.ArgumentParser(
                     prog='show-image',
@@ -22,13 +28,13 @@ def main():
    parser.add_argument('-v', '--verbose', action='store_true') 
    parser.add_argument('-bc', '--backcolor', help="Back color (black, white etc.)", type=ImageColor.colormap.get)
    parser.add_argument('-tc', '--textcolor', help="Text color", default='white', type=ImageColor.colormap.get)
-   parser.add_argument('-pw', '--pwidth', help="Picture Width", default=config.IMG_SIZE[0], type=int)
-   parser.add_argument('-ph', '--pheight', help="Picture Height", default=config.IMG_SIZE[1], type=int)
+   parser.add_argument('-pw', '--pwidth', help="Picture Width", default=settings.FRAME.IMG_SIZE[0], type=int)
+   parser.add_argument('-ph', '--pheight', help="Picture Height", default=settings.FRAME.IMG_SIZE[1], type=int)
   
     
    args = parser.parse_args()
    logLevel : LOGGER = LOGGER.DEBUG if args.verbose else LOGGER.ERROR
-   LOGGER.basicConfig(level=logLevel)
+   LOGGER.basicConfig(level=logLevel, format="%(asctime)s %(levelname)s:%(name)s:%(message)s")
    LOGGER.info("Starting")
    size = (int(args.pwidth),int(args.pheight))
    backcolor : str = args.backcolor if args.backcolor else 'black' #set default color
@@ -57,7 +63,7 @@ def main():
      show = resize.resize_and_centerImg(txtImg)
    else:
       LOGGER.debug("Reading image from stdin")
-      show = resize.resize_and_center(sys.stdin.buffer)
+      show = resize.resize_and_center(sys.stdin.buffer, targetSize=settings.FRAME.IMG_SIZE)
    return frame_ctrl.showImage(resize.imgToBytes(show))
 
 if (__name__ == "__main__"):

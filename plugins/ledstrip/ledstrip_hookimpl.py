@@ -5,6 +5,9 @@ from sender import Sender, calcColor
 import ledconfig as ledConfig
 from PIL import Image
 
+PLUGIN_NAME = "LEDSTRIP"
+
+
 class LedStripPlugin:
     sender : Sender = None
 
@@ -14,6 +17,7 @@ class LedStripPlugin:
         time.sleep(0.5) #wait for sender thread init
 
     def ledstrip(self, img : Image):
+        if not img: return
         width = len(ledConfig.LED_TOP)
         height = len(ledConfig.LED_RIGHT)
         ledImage : Image.Image = img.resize((width, height))
@@ -34,8 +38,16 @@ class LedStripPlugin:
 
 @plugins.hookimpl
 def imageChangeAfter(app : SlideShow):
-    app.ledStrip.ledstrip(app.lastShownImage)
+    app.ledStrip.ledstrip(app.image)
 
+@plugins.hookimpl
+def loadCfg(app) -> None:
+    """called before startup
+    Placeholder for plugin default settings
+    Use app.loadCfg(PLUGIN_NAME, dict_with_config):
+    """
+    
+  
 
 @plugins.hookimpl
 def startup(app : SlideShow):
