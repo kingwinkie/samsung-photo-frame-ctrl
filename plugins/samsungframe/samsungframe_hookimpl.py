@@ -47,7 +47,7 @@ def imageLoader(app : slideshow.SlideShow) -> ImgLoader:
     """
 
 @plugins.hookimpl
-def imageChangeBegore(app : slideshow.SlideShow):
+def imageChangeBefore(app : slideshow.SlideShow):
      """called before a new image is required
     Returns ImgLoader desc. object.
     """

@@ -15,6 +15,10 @@ class SlideShow:
     image : Image = None
     pm : plugins.FramePluginManager = None
     cfg : Dynaconf = None
+    quit : bool = False #quit requested from a plugin
+
+    def quitApp(self, quit = True):
+        self.quit = quit
 
     def delayPluginsDo(self, delay : float):
         """Calls do() in plugins"""
@@ -24,7 +28,7 @@ class SlideShow:
             self.pm.hook.do(app=self) #call plugins
             delta = time.time() - start #measure time lost in plugins
             waitD = wait - delta
-            if waitD > 0:
+            if waitD > 0 and not quit:
                 time.sleep(waitD)
             
     def get_plugin_manager(self):
@@ -32,21 +36,15 @@ class SlideShow:
         self.pm.add_hookspecs(hookspecs)
         self.pm.load_all_plugins(self.cfg.FRAME.PLUGINS_ACTIVE)
         
-    def sendToFrame(self, img : Image):
-        if self.cfg.FRAME.DUMMY: return True #dummy, don't show anything
-        ret : bool = False
-        buffer : bytes = resize.imgToBytes(img)
-        if buffer:
-            while not ret:
-                ret = frame_ctrl.showImage(buffer)
-                if not ret:
-                    time.sleep(5) #the frame is not in monitor mode, has been disconnected etc.
-        return ret
+    def sendToFrame(self):
+        ret : list[bool] = self.pm.hook.showImage(app=self)
+        if ret and len(ret)>0 and ret[0]: 
+            return True
 
     def showImagePlugins(self, image : Image):
         if image:
             self.image = image
-            self.pm.hook.imageChangeBegore(app=self)
+            self.pm.hook.imageChangeBefore(app=self)
             if self.pm.hook.showImage(app=self):
                 self.pm.hook.imageChangeAfter(app=self)
 
@@ -57,7 +55,7 @@ class SlideShow:
             if resizedImg:
                 self.image = resizedImg
                 self.pm.hook.imageChangeBefore(app=self)
-                if self.sendToFrame(self.image):
+                if self.sendToFrame():
                     self.pm.hook.imageChangeAfter(app=self)
                     return True
 
@@ -72,6 +70,7 @@ class SlideShow:
         while delay:
             if self.show(imgLoader): 
                 self.delayPluginsDo(delay)
+                if self.quit: return #quit was rerquested from a plugin
             else:
                 time.sleep(15) #connection lost. Fast request
 
@@ -88,41 +87,22 @@ class SlideShow:
 
     def run(self, realPath):
         self.cfg = settings
-        self.saveCfg(realPath) #store main settings
         self.get_plugin_manager()
         self.pm.hook.loadCfg(app=self) #loads defaults
-        self.saveCfg(realPath) #store plugins settings
         self.pm.hook.startup(app=self)
         try:
-            while delay:
-                #if remote.iface.quit: return
-                if self.show(): 
-                    time.sleep(delay)
-                else:
-                    time.sleep(15) #connection lost. Fast request
+            self.slideShow()
         except KeyboardInterrupt:
             LOGGER.info("Interrupted")
         self.pm.hook.exit(app=self)
         
-    def main(self):
-        
-        self.pm = get_plugin_manager()
-        self.size = config.IMG_SIZE
-
-        
-        self.mainThread = threading.Thread(target=self.slideShow,daemon=True)
-        self.mainThread.start()
-        remote.iface.interface.time = 10
-        streamlit.web.bootstrap.run("remote/remote.py", False, [], []) # blocking
-        
-        return 0 # success
-
 slideShow : SlideShow = None
 if __name__ == '__main__':
     realPath = osp.join(osp.realpath(osp.dirname(__file__)))
     settings = Dynaconf(
         envvar_prefix="FRAME",
-        settings_files=[osp.join(realPath,'default.json'), osp.join(realPath,'settings.toml'), osp.join(realPath,'.secrets.toml')]
+        settings_files=[  osp.join(realPath,'settings.toml'), osp.join(realPath,'.secrets.toml')],
+       
         )
 
     LOGGER.basicConfig(level=settings.FRAME.LOGLEVEL, format="%(asctime)s %(levelname)s:%(name)s:%(message)s")

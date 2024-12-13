@@ -1,6 +1,4 @@
 import pluggy
-import slideshow
-from loadimg import ImgLoader
 
 hookspec = pluggy.HookspecMarker("slideshow")
 
@@ -12,7 +10,7 @@ def exit(app) -> None:
     """
 
 @hookspec 
-def imageLoader(app) -> ImgLoader:
+def imageLoader(app):
     """called when a new image is required
     Returns ImgLoader desc. object.
     """
@@ -30,7 +28,7 @@ def imageChangeBefore(app) -> None:
     """
 
 @hookspec
-def startup(app : slideshow.SlideShow) -> None:
+def startup(app) -> None:
     """called after application start
     Placeholder for plugin initialisation
     """
@@ -46,4 +44,9 @@ def loadCfg(app) -> None:
 def do(app) -> None:
     """called every second when frame is waiting to next frame.
     Intended for showing real time etc.
+    """
+
+@hookspec
+def showImage(app) -> bool:
+    """called when a new image should be shown. Intended use is for display plugins. Returns success or failure.
     """

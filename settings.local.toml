@@ -18,7 +18,7 @@ PLUGINS_AVAILABLE = [
 ]
 PLUGINS_ACTIVE = [
     "loadimgurl",
-    "samsungframe",
+    "dummyframe",
 ]
 
 [LOADIMGURL]
