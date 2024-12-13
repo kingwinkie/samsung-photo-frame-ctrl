@@ -28,7 +28,8 @@ class SlideShow:
             self.pm.hook.do(app=self) #call plugins
             delta = time.time() - start #measure time lost in plugins
             waitD = wait - delta
-            if waitD > 0 and not quit:
+            if self.quit: return
+            if waitD > 0:
                 time.sleep(waitD)
             
     def get_plugin_manager(self):
@@ -72,7 +73,8 @@ class SlideShow:
                 self.delayPluginsDo(delay)
                 if self.quit: return #quit was rerquested from a plugin
             else:
-                time.sleep(15) #connection lost. Fast request
+                time.sleep(10) #connection lost. Fast request
+                self.delayPluginsDo(delay)
 
 
     def saveCfg(self, path):

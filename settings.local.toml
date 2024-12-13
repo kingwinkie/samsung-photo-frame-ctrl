@@ -17,7 +17,7 @@ PLUGINS_AVAILABLE = [
     "dummyframe"
 ]
 PLUGINS_ACTIVE = [
-    "loadimgurl",
+    "loadimgartsy",
     "dummyframe",
 ]
 
@@ -25,3 +25,4 @@ PLUGINS_ACTIVE = [
 IMG_SOURCE_PATH = "https://random.imagecdn.app/1024/600"
 HTTP_DOWNLOAD_LIMIT = 10
 DELAY = 10
+

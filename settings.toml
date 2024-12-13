@@ -12,6 +12,7 @@ PLUGINS_AVAILABLE = [
     "ledstrip",
     "loadimgfolder",
     "loadimgurl",
+    "loadimgartsy",
     "clocks",
     "samsungframe",
     "dummyframe"

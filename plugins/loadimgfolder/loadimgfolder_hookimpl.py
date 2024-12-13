@@ -1,4 +1,5 @@
 import plugins
+import slideshow
 from imgfolderloader import ImgLoaderFolder
 from loadimg import ImgLoader
 
