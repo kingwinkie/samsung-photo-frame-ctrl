@@ -1,4 +1,5 @@
 import plugins
+import slideshow
 from imgfolderloader import ImgLoaderFolder
 from loadimg import ImgLoader
 
@@ -6,16 +7,28 @@ from loadimg import ImgLoader
 PLUGIN_NAME = "LOADIMGFOLDER"
 
 @plugins.hookimpl
-def imageChangeAfter(app):
-    return None
+def showImage(app : slideshow.SlideShow) -> bool:
+     """called when a new image should be shown. Intended use is for display plugins. Returns success or failure.
+    """
+     
+@plugins.hookimpl
+def imageChangeAfter(app : slideshow.SlideShow) -> None:
+    """called after image was successfuly changed on the screen
+    Intended for effects etc.
+    """
 
 @plugins.hookimpl
-def startup(app):
-    return None
+def startup(app : slideshow.SlideShow) -> None:
+    """called after application start
+    Placeholder for plugin initialisation
+    """
+    app.imgLoaderFolder = ImgLoaderFolder(loaderconfig.IMG_SOURCE_PATH, imgExt=loaderconfig.IMG_EXT)
 
 @plugins.hookimpl
-def exit(app):
-    return None
+def exit(app : slideshow.SlideShow) -> None:
+    """called when application is about to quit
+    Placeholder for plugin cleanup
+    """
 
 @plugins.hookimpl
 def imageLoader(app) -> ImgLoader:

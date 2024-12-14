@@ -5,4 +5,5 @@ certifi
 argparse
 netifaces
 pluggy
+pygame
 dynaconf
