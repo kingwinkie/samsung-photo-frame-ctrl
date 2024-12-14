@@ -14,7 +14,7 @@ class Clocks:
         return text
     def showTime(self):
         size = self.app.cfg.FRAME.IMG_SIZE
-        image = Image.new('RGBA', size , (0,0,0,128))
+        image = Image.new('RGBA', size , (0,0,0,0))
         # Initialize the drawing context
         draw = ImageDraw.Draw(image)
         font = ImageFont.load_default(200)
