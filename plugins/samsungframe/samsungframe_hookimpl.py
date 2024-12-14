@@ -5,17 +5,28 @@ import time
 import slideshow
 from loadimg import ImgLoader
 from PIL import Image
+PLUGIN_NAME = "SAMSUNGFRAME"
 
-def sendToFrame(img : Image):
+def sendToFrame(img : Image, frameModel : str):
     ret : bool = False
     buffer : bytes = resize.imgToBytes(img)
     if buffer:
         while not ret:
-            ret = frame_ctrl.showImage(buffer)
+            ret = frame_ctrl.showImage(buffer,frameModel=frameModel)
             if not ret:
                 time.sleep(5) #the frame is not in monitor mode, has been disconnected etc.
     return ret
 
+@plugins.hookimpl
+def loadCfg(app) -> None:
+    """called before startup
+    Placeholder for plugin default settings
+    Use app.loadCfg(PLUGIN_NAME, dict_with_config):
+    """
+    defaultConfig = {
+        "MODEL" : "",
+    }
+    app.loadCfg(PLUGIN_NAME, defaultConfig)
 
 @plugins.hookimpl
 def showImage(app : slideshow.SlideShow) -> bool:
@@ -56,4 +67,4 @@ def imageChangeBefore(app : slideshow.SlideShow):
 def showImage(app : slideshow.SlideShow) -> bool:
     """called when a new image should be shown. Intended use is for display plugins. Returns success or failure.
     """
-    return sendToFrame(app.image)
+    return sendToFrame(app.image, app.cfg.SAMSUNGFRAME.MODEL)

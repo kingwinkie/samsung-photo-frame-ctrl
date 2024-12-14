@@ -1,7 +1,8 @@
 import plugins
 from slideshow import SlideShow
 from loadimg import ImgLoader
-from PIL import Image, ImageDraw, ImageFont
+from drawtext import drawText
+from PIL import Image
 import time
 
 PLUGIN_NAME = "CLOCKS"
@@ -14,22 +15,9 @@ class Clocks:
         return text
     def showTime(self):
         size = self.app.cfg.FRAME.IMG_SIZE
-        image = Image.new('RGBA', size , (0,0,0,0))
-        # Initialize the drawing context
-        draw = ImageDraw.Draw(image)
-        font = ImageFont.load_default(200)
-        
         text : str = self.getTime()
+        self.app.image = drawText(text=text, size=size, fontSize=200, textColor=(255,255,255,255), halign="center", valign="center", bkImage=self.currentImage)
         self.shownTime = text
-        bbox = draw.textbbox((0, 0), text, font=font)
-        textSize : tuple[int, int] = bbox[2] - bbox[0], bbox[3] - bbox[1]
-        textPos : tuple[int, int] = (size[0] - textSize[0]) / 2, (size[1] - textSize[1]) / 2
-        # Add text to image
-        draw.text(textPos, text, self.app.cfg.CLOCKS.FILL, font=font)
-        if self.currentImage:
-            img : Image = self.currentImage.convert("RGBA")
-            img.paste(image, mask=image)
-            self.app.image = img.convert("RGB")
 
 
 
@@ -58,7 +46,7 @@ def do(app : SlideShow) -> None:
     now = clocks.getTime()
     if now != clocks.shownTime:
         clocks.showTime()
-        app.sendToFrame(app.image)
+        app.sendToFrame()
 
 @plugins.hookimpl
 def loadCfg(app) -> None:

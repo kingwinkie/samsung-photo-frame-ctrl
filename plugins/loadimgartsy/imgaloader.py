@@ -2,6 +2,7 @@ import requests
 import random
 import time
 from loadimg import ImgLoader
+import logging as LOGGER
 
 class ArtsyAPI:
     def __init__(self, client_id, client_secret):
@@ -9,6 +10,9 @@ class ArtsyAPI:
         self.client_secret = client_secret
         self.token = self.get_token()
         self.nextURL = "https://api.artsy.net/api/artworks"
+        self.artwork : dict = None
+        
+    
 
     def get_token(self):
         url = "https://api.artsy.net/api/tokens/xapp_token"
@@ -33,14 +37,14 @@ class ArtsyAPI:
         return artworks
 
 class RandomImageDownloader:
-    def __init__(self, artsy_api):
+    def __init__(self, artsy_api, size):
         self.artsy_api = artsy_api
+        self.size = size
 
-    def getRandomImageURL(self) -> str:
+    def getRandomArtwork(self) -> str:
         artworks = self.artsy_api.get_artworks()
         random_artwork = random.choice(artworks)
-        image_url = random_artwork["_links"]["image"]["href"].replace("{image_version}","large")
-        return image_url
+        return random_artwork
         
 
 class ImgLoaderArtsy(ImgLoader):
@@ -49,23 +53,29 @@ class ImgLoaderArtsy(ImgLoader):
     downloadLimit : int #min delay between downloads
     lastDownloadAttempt : int #timestamp of the latest download attempt
 
-    def __init__(self, client_id : str, client_secret : str):
+    def __init__(self, client_id : str, client_secret : str, size : tuple[int,int]):
         artsyAPI = ArtsyAPI(client_id=client_id, client_secret=client_secret)
-        self.downloader = RandomImageDownloader(artsyAPI)
+        self.downloader = RandomImageDownloader(artsyAPI, size)
         self.imageb = None
         self.downloadLimit = 10
         self.lastDownloadAttempt = 0
+        self.size = size
         self.prepare()
 
     def prepare(self):
         """
         Informs loader that a new image will be requested (for slow downloads) 
         """
-        self.imageb = None
-        self.lastDownloadAttempt = time.time()
-        url : str = self.downloader.getRandomImageURL()
-        self.imageb = self.loadImgCURL( url )
-
+        try:
+            self.imageb = None
+            self.lastDownloadAttempt = time.time()
+            self.artwork : dict = self.downloader.getRandomArtwork()
+            url = self.artwork["_links"]["image"]["href"].replace("{image_version}","large")
+            
+            self.imageb = self.loadImgCURL( url )
+                    
+        except requests.exceptions.ConnectionError as connError:
+            LOGGER.error(f"Image downloading error {connError}")
     def load(self):
         """
         Load (return) the image

@@ -1,14 +1,15 @@
 
+
 [FRAME]
 LOGLEVEL = "DEBUG"
 IMG_SIZE = [
     1024,
     600,
 ]
-MODEL = ""
-DUMMY = false
-DELAY = 10
-PLUGINS_AVAILABLE = [
+DELAY = 60
+
+[PLUGUNS]
+AVAILABLE = [
     "ledstrip",
     "loadimgfolder",
     "loadimgurl",
@@ -17,12 +18,19 @@ PLUGINS_AVAILABLE = [
     "samsungframe",
     "dummyframe"
 ]
-PLUGINS_ACTIVE = [
+
+ACTIVE = [
     "loadimgurl",
     "samsungframe",
 ]
+
+[SAMSUNGFRAME]
+MODEL = ""
 
 [LOADIMGURL]
 IMG_SOURCE_PATH = "https://random.imagecdn.app/1024/600"
 HTTP_DOWNLOAD_LIMIT = 10
 DELAY = 10
+
+[LOADIMGARTSY]
+HTTP_DOWNLOAD_LIMIT=5

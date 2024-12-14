@@ -31,12 +31,18 @@ def resize_and_centerImg(img : Image.Image, targetSize : tuple[int,int], backcol
         pass
     return new_img
 
+def bytes2img(file : bytes) -> Image:
+    try:
+        img = Image.open(file)
+        return img
+    except UnidentifiedImageError:
+        pass
+    
 def resize_and_center(file,targetSize : tuple[int,int],**kwargs) -> Image.Image:
     """file is filename or bytes or readbuffer (Python 3.9 on Pi can't process '|')"""
     new_img : Image.Image = None
     try:
         # Open the image
-        Image.open
         with Image.open(file) as img:
             return resize_and_centerImg(img,targetSize=targetSize, **kwargs)
     except UnidentifiedImageError:

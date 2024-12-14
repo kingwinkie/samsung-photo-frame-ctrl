@@ -1,28 +1,12 @@
-
 [FRAME]
-LOGLEVEL = "DEBUG"
-IMG_SIZE = [
-    1024,
-    600,
-]
+dynaconf_merge=true
 MODEL = ""
-DUMMY = false
-DELAY = 10
-PLUGINS_AVAILABLE = [
-    "ledstrip",
-    "loadimgfolder",
-    "loadimgurl",
+
+[PLUGINS]
+ACTIVE = [
     "clocks",
-    "samsungframe",
-    "dummyframe"
-]
-PLUGINS_ACTIVE = [
     "loadimgartsy",
     "dummyframe",
 ]
 
-[LOADIMGURL]
-IMG_SOURCE_PATH = "https://random.imagecdn.app/1024/600"
-HTTP_DOWNLOAD_LIMIT = 10
-DELAY = 10
 

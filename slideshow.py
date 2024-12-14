@@ -13,10 +13,11 @@ import plugins.hookspecs as hookspecs
 
 class SlideShow:
     image : Image = None
+    imageInfo : dict = None #information about currently shown picture
     pm : plugins.FramePluginManager = None
     cfg : Dynaconf = None
     quit : bool = False #quit requested from a plugin
-
+    
     def quitApp(self, quit = True):
         self.quit = quit
 
@@ -35,7 +36,7 @@ class SlideShow:
     def get_plugin_manager(self):
         self.pm = plugins.FramePluginManager("slideshow")
         self.pm.add_hookspecs(hookspecs)
-        self.pm.load_all_plugins(self.cfg.FRAME.PLUGINS_ACTIVE)
+        self.pm.load_all_plugins(self.cfg.PLUGINS.ACTIVE)
         
     def sendToFrame(self):
         ret : list[bool] = self.pm.hook.showImage(app=self)
@@ -103,8 +104,7 @@ if __name__ == '__main__':
     realPath = osp.join(osp.realpath(osp.dirname(__file__)))
     settings = Dynaconf(
         envvar_prefix="FRAME",
-        settings_files=[  osp.join(realPath,'settings.toml'), osp.join(realPath,'.secrets.toml')],
-       
+        settings_files=[  osp.join(realPath,'settings.toml'), osp.join(realPath,'.secrets.toml')]
         )
 
     LOGGER.basicConfig(level=settings.FRAME.LOGLEVEL, format="%(asctime)s %(levelname)s:%(name)s:%(message)s")
