@@ -22,7 +22,7 @@ def startup(app : slideshow.SlideShow) -> None:
     """called after application start
     Placeholder for plugin initialisation
     """
-    app.imgLoaderFolder = ImgLoaderFolder(loaderconfig.IMG_SOURCE_PATH, imgExt=loaderconfig.IMG_EXT)
+    app.imgLoaderFolder = ImgLoaderFolder(app.cfg[PLUGIN_NAME].IMG_SOURCE_PATH, imgExt=app.cfg[PLUGIN_NAME].IMG_EXT)
 
 @plugins.hookimpl
 def exit(app : slideshow.SlideShow) -> None:
@@ -32,7 +32,7 @@ def exit(app : slideshow.SlideShow) -> None:
 
 @plugins.hookimpl
 def imageLoader(app) -> ImgLoader:
-    imgLoader = ImgLoaderFolder(app.cfg.LOADIMGFOLDER.IMG_SOURCE_PATH, imgExt=app.cfg.LOADIMGFOLDER.IMG_EXT)
+    imgLoader = ImgLoaderFolder(app.cfg[PLUGIN_NAME].IMG_SOURCE_PATH, imgExt=app.cfg[PLUGIN_NAME].IMG_EXT)
     return imgLoader
 
 

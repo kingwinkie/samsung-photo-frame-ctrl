@@ -6,7 +6,7 @@ PLUGIN_NAME="LOADIMGURL"
 
 @plugins.hookimpl
 def imageLoader(app) -> ImgLoader:
-    imgLoader = ImgLoaderURL(app.cfg.LOADIMGURL.IMG_SOURCE_PATH, app.cfg.LOADIMGURL.HTTP_DOWNLOAD_LIMIT)
+    imgLoader = ImgLoaderURL(app.cfg[PLUGIN_NAME].IMG_SOURCE_PATH, app.cfg[PLUGIN_NAME].HTTP_DOWNLOAD_LIMIT)
     return imgLoader
 
 @plugins.hookimpl

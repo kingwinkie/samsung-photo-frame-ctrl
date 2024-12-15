@@ -4,7 +4,7 @@
 import frame_ctrl
 import sys
 import logging as LOGGER
-import resize
+import imgutils as imgutils
 import argparse
 import txt2img
 from os import path as osp
@@ -45,14 +45,14 @@ def main():
    inBuffer = None
    if args.input:
      LOGGER.debug(f"Reading {args.input}")
-     show = resize.resize_and_center(args.input)
+     show = imgutils.resize_and_center(args.input)
    elif args.textinput:
      LOGGER.debug(f"Creating Image from text {args.textinput}")
      # create the image from the text
      txtImg : Image = txt2img.createImage(text=args.textinput,size=size)
      if args.input:
       txt2img.addBgImage(txtImg, args.input)
-     show = resize.resize_and_centerImg(txtImg)
+     show = imgutils.resize_and_centerImg(txtImg)
    elif args.text:
      # create the image from text from stdin
      inputText = sys.stdin.read()
@@ -60,11 +60,11 @@ def main():
      txtImg : Image = txt2img.createImage(inputText,size=size)
      if args.bgimage:
       txt2img.addBgImage(txtImg, args.input)
-     show = resize.resize_and_centerImg(txtImg)
+     show = imgutils.resize_and_centerImg(txtImg)
    else:
       LOGGER.debug("Reading image from stdin")
-      show = resize.resize_and_center(sys.stdin.buffer, targetSize=settings.FRAME.IMG_SIZE)
-   return frame_ctrl.showImage(resize.imgToBytes(show))
+      show = imgutils.resize_and_center(sys.stdin.buffer, targetSize=settings.FRAME.IMG_SIZE)
+   return frame_ctrl.showImage(imgutils.imgToBytes(show))
 
 if (__name__ == "__main__"):
    main()

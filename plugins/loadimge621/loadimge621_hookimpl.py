@@ -19,10 +19,10 @@ def exit(app):
 @plugins.hookimpl
 def imageLoader(app) -> ImgLoader:
     imgLoader = ImgLoaderE621()
-    imgLoader.pages = app.cfg.LOADIMGE621.PAGES
-    imgLoader.api = app.cfg.LOADIMGE621.API
-    imgLoader.tags = app.cfg.LOADIMGE621.TAGS
-    imgLoader.downloadLimit = app.cfg.LOADIMGE621.HTTP_DOWNLOAD_LIMIT
+    imgLoader.pages = app.cfg[PLUGIN_NAME].PAGES
+    imgLoader.api = app.cfg[PLUGIN_NAME].API
+    imgLoader.tags = app.cfg[PLUGIN_NAME].TAGS
+    imgLoader.downloadLimit = app.cfg[PLUGIN_NAME].HTTP_DOWNLOAD_LIMIT
     app.pluginImgLoaderE = imgLoader
     imgLoader.url = imgLoader.getURL() #download first URL
     return imgLoader

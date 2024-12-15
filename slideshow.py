@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import logging as LOGGER
-import resize
+import imgutils as imgutils
 import time
 import plugins
 from os import path as osp
@@ -39,6 +39,8 @@ class SlideShow:
         self.pm.load_all_plugins(self.cfg.PLUGINS.ACTIVE)
         
     def sendToFrame(self):
+        """Shows the image at defined frames"""
+        self.pm.hook.imageChangeBeforeEffects(app=self) # call effect plugins here (for nightmode etc.)
         ret : list[bool] = self.pm.hook.showImage(app=self)
         if ret and len(ret)>0 and ret[0]: 
             return True
@@ -53,7 +55,7 @@ class SlideShow:
     def show(self, imgLoader):
         buffer : bytes = imgLoader.load()
         if buffer:
-            resizedImg = resize.resize_and_center(buffer, self.cfg.FRAME.IMG_SIZE)
+            resizedImg = imgutils.resize_and_center(buffer, self.cfg.FRAME.IMG_SIZE)
             if resizedImg:
                 self.image = resizedImg
                 self.pm.hook.imageChangeBefore(app=self)

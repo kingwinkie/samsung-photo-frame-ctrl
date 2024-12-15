@@ -1,5 +1,5 @@
 import plugins
-import resize
+import imgutils as imgutils
 import frame_ctrl
 import time
 import slideshow
@@ -9,7 +9,7 @@ PLUGIN_NAME = "SAMSUNGFRAME"
 
 def sendToFrame(img : Image, frameModel : str):
     ret : bool = False
-    buffer : bytes = resize.imgToBytes(img)
+    buffer : bytes = imgutils.imgToBytes(img)
     if buffer:
         while not ret:
             ret = frame_ctrl.showImage(buffer,frameModel=frameModel)
@@ -67,4 +67,4 @@ def imageChangeBefore(app : slideshow.SlideShow):
 def showImage(app : slideshow.SlideShow) -> bool:
     """called when a new image should be shown. Intended use is for display plugins. Returns success or failure.
     """
-    return sendToFrame(app.image, app.cfg.SAMSUNGFRAME.MODEL)
+    return sendToFrame(app.image, app.cfg[PLUGIN_NAME].MODEL)

@@ -1,57 +1,61 @@
-import pluggy
+import plugins
+PLUGIN_NAME = "<PLUGINNAME>"
 
-hookspec = pluggy.HookspecMarker("slideshow")
 
-
-@hookspec
+@plugins.hookimpl
 def exit(app) -> None:
     """called when application is about to quit
     Placeholder for plugin cleanup
     """
 
-@hookspec 
+@plugins.hookimpl 
 def imageLoader(app):
     """called when a new image is required
     Returns ImgLoader desc. object.
     """
 
-@hookspec
+@plugins.hookimpl
 def imageChangeAfter(app) -> None:
     """called after image was successfuly changed on the screen
     Intended for effects etc. Image is in app.image
     """
 
-@hookspec
+@plugins.hookimpl
 def imageChangeBefore(app) -> None:
     """called after image was successfuly changed on the screen
     Intended for effects etc. Image is in app.image
     """
 
-@hookspec
+@plugins.hookimpl
 def startup(app) -> None:
     """called after application start
     Placeholder for plugin initialisation
     """
 
-@hookspec
+@plugins.hookimpl
 def loadCfg(app) -> None:
     """called before startup
     Placeholder for plugin default settings
     Use app.loadCfg(PLUGIN_NAME, dict_with_config)
     """
+    defaultConfig = {
+        "VARIABLE1" : "default_value1",
+        "VARIABLE2" : "default_value2",
+    }
+    app.loadCfg(PLUGIN_NAME, defaultConfig) #load the real config and merge it with default values
 
-@hookspec
+@plugins.hookimpl
 def do(app) -> None:
     """called every second when frame is waiting to next frame.
     Intended for showing real time etc.
     """
 
-@hookspec
+@plugins.hookimpl
 def showImage(app) -> bool:
     """called when a new image should be shown. Intended use is for display plugins. Returns success or failure.
     """
 
-@hookspec
+@plugins.hookimpl
 def imageChangeBeforeEffects(app):
     """For post-effects aka NightMode. Called after imageChangeBefore and before showImage. Intended use is for global filters.
     """

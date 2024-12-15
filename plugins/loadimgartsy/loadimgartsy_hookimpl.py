@@ -1,8 +1,8 @@
 import plugins
 from loadimg import ImgLoader
 from imgaloader import ImgLoaderArtsy
-from resize import bytes2img, imgToBytes
-from drawtext import drawText
+from imgutils import bytes2img, imgToBytes
+from imgutils import drawText, HAlign, VAlign
 
 PLUGIN_NAME = "LOADIMGARTSY"
 
@@ -10,7 +10,7 @@ PLUGIN_NAME = "LOADIMGARTSY"
 def imageChangeBefore(app):
     artsyImgLoader : ImgLoaderArtsy = app.artsyImgLoader
     text=f"{artsyImgLoader.artwork['slug']} ({artsyImgLoader.artwork['date']})"
-    app.image = drawText(text=text, size=artsyImgLoader.size, fontSize=12, textColor=(192,192,192,192), halign="right", valign="bottom", bkImage=app.image, offset=(10,5))
+    app.image = drawText(text=text, size=artsyImgLoader.size, fontSize=12, textColor=(192,192,192,192), align=(HAlign.RIGHT, VAlign.BOTTOM), bgImage=app.image, offset=(10,5))
     return None
 
 @plugins.hookimpl
@@ -23,8 +23,8 @@ def exit(app):
 
 @plugins.hookimpl
 def imageLoader(app) -> ImgLoader:
-    artsyImgLoader = ImgLoaderArtsy(app.cfg.LOADIMGARTSY.CLIENT_ID,app.cfg.LOADIMGARTSY.CLIENT_SECRET,app.cfg.FRAME.IMG_SIZE)
-    artsyImgLoader.downloadLimit = app.cfg.LOADIMGARTSY.HTTP_DOWNLOAD_LIMIT
+    artsyImgLoader = ImgLoaderArtsy(app.cfg[PLUGIN_NAME].CLIENT_ID,app.cfg[PLUGIN_NAME].CLIENT_SECRET,app.cfg.FRAME.IMG_SIZE)
+    artsyImgLoader.downloadLimit = app.cfg[PLUGIN_NAME].HTTP_DOWNLOAD_LIMIT
     app.artsyImgLoader = artsyImgLoader
     return artsyImgLoader
 

@@ -5,7 +5,7 @@ import argparse
 from PIL import Image, ImageDraw, ImageFont, ImageColor
 import sys
 import logging as LOGGER
-import resize
+import imgutils as imgutils
 from os import path as osp
 from dynaconf import Dynaconf
 
@@ -43,7 +43,7 @@ def createImage(text : str, size : tuple[int,int] = settings.FRAME.IMG_SIZE, fon
 
     
 def addBgImage(img : Image.Image, bgImage : str, size = settings.FRAME.IMG_SIZE, backcolor : str = "black"):
-    bgImg : Image.Image = resize.resize_and_center(bgImage, targetSize=size, backcolor=backcolor)
+    bgImg : Image.Image = imgutils.resize_and_center(bgImage, targetSize=size, backcolor=backcolor)
     if bgImg:
         bgImg.paste(img, mask=img)
         img = bgImg

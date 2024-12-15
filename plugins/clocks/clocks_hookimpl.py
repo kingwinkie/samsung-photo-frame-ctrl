@@ -1,7 +1,8 @@
 import plugins
+import imgutils
 from slideshow import SlideShow
 from loadimg import ImgLoader
-from drawtext import drawText
+
 from PIL import Image
 import time
 
@@ -16,7 +17,7 @@ class Clocks:
     def showTime(self):
         size = self.app.cfg.FRAME.IMG_SIZE
         text : str = self.getTime()
-        self.app.image = drawText(text=text, size=size, fontSize=200, textColor=(255,255,255,255), halign="center", valign="center", bkImage=self.currentImage)
+        self.app.image = imgutils.drawText(text=text, size=size, fontSize=200, textColor=(255,255,255,255), align=(imgutils.HAlign.CENTER, imgutils.VAlign.CENTER), bgImage=self.currentImage)
         self.shownTime = text
 
 

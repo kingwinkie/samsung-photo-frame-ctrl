@@ -4,9 +4,15 @@ MODEL = ""
 
 [PLUGINS]
 ACTIVE = [
+    "nightmode",
     "clocks",
     "loadimgartsy",
     "dummyframe",
+    "ledstrip"
 ]
 
-
+[NIGHTMODE]
+    "TIMES" = [["08:00", "day"],
+        ["20:00", "night"],
+        ]
+    "NIGHT_BRIGHTNESS" = 10

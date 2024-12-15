@@ -1,5 +1,6 @@
 import pygame
 import threading
+import logging as LOGGER
 from PIL import Image
 from slideshow import SlideShow
 
@@ -16,38 +17,48 @@ class DummyFrame:
         self.displayThread.start()
         self.image = None
         self.app = app
+        self.UE_NEW_IMG = pygame.event.Event(pygame.event.custom_type())
+    
     def __del__(self):
         pygame.quit()
 
     def runner(self):
-        pygame.init()
+        """Pygame event thread"""
+        pygame.init() # must be started in the thread
         self.display = pygame.display.set_mode(self.window_size)
         pygame.display.set_caption('Dummy frame')
-
         running = True
+        self.showImage(self.image) #show the intial image if it exists
         while running:
-            if self.image:
+            event = pygame.event.wait()
+            if event.type == self.UE_NEW_IMG.type:
                 self.showImage(self.image)
-                self.image = None
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        running = False
-        if not running:
-            self.app.quitApp()
+            elif event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                running = False
+        self.app.quitApp()
 
-    def showImage(self,image : Image):
-        """called when a new image should be shown. Intended use is for display plugins. Returns success or failure.
-        """
+    def pilImg2Surface(self,image : Image) -> pygame.Surface:
+        """converts PIL image to pygame image"""
         if image:
             image_data = image.tobytes()
-            image_size = image.size
-            pygame_surface = pygame.image.frombytes(image_data, image_size, 'RGB')
-            self.display.blit(pygame_surface, (0, 0))
-            # Update the display
+            return pygame.image.frombytes(image_data, image.size, 'RGB')
+
+    def showSurface(self,pgSurface : pygame.Surface):
+        """updates the display"""
+        if pgSurface:
+            self.display.blit(pgSurface, (0, 0))
             pygame.display.flip()
+            LOGGER.debug("ChangeImg Done")
+
+    def showImage(self,image : Image):
+        """shows PIL image. Called from inside the thread"""
+        pgSurface = self.pilImg2Surface(image)
+        self.showSurface(pgSurface)
 
     def setImage(self, image : Image):
+        """Changes the image. Called from outside of the thread"""
         self.image = image
+        pygame.event.post(self.UE_NEW_IMG)
+        LOGGER.debug("ChangeImg Request")
