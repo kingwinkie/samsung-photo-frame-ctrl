@@ -28,8 +28,15 @@ Features
   * Can show text over the image
  
 * slideshow.py
-  * In mode IMG_SOURCE = 1 (FOLDER) shows images from folder defined in IMG_SOURCE_PATH in random order
-  * In mode IMG_SOURCE = 2 (URL) downloads images from URL defined in IMG_SOURCE_PATH
+  * Fully pluggable slideshow for all supported frames
+  * Dummy frame plugin for development
+  * Plugin for background LED strip (Neopixel)
+  * Plugin for Clocks (shows big clocks at the frame screen)
+  * Plugin for Night Mode (Leds are turned off, lower contrast and warmer colors during night)
+  * Plugins for image sources:
+    * From a local folder
+    * From a generic URL
+    * From Artsy.net (requires user account and credentials)
 
 * txt2img.py 
   * Converts text to image. Output can be piped to show-image.py
@@ -57,6 +64,18 @@ Dependencies
 * pillow
 * pycurl
 * certifi
+* argparse
+* netifaces
+* pluggy
+* pygame
+* dynaconf
+
+Installation
+------------
+* clone the repository
+* create venv (python -m venv .venv)
+* install the main package (.venv/bin/pip install -e samsungframe)
+* check, add or modify settings.local.toml and .secrets.toml
 
 Usage
 -----
