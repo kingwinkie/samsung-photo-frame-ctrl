@@ -70,8 +70,11 @@ class ImgLoaderArtsy(ImgLoader):
             self.imageb = None
             self.lastDownloadAttempt = time.time()
             self.artwork : dict = self.downloader.getRandomArtwork()
-            url = self.artwork["_links"]["image"]["href"].replace("{image_version}","large")
-            
+            try:
+                url = self.artwork["_links"]["image"]["href"].replace("{image_version}","large")
+            except KeyError as e:
+                LOGGER.error(f"Arkwork URL key error {e}")
+                return None
             self.imageb = self.loadImgCURL( url )
                     
         except requests.exceptions.ConnectionError as connError:

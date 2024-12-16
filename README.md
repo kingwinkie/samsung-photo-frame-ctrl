@@ -1,7 +1,7 @@
 Samsung photo frame control with download ability for Raspberry Zero
 =================
 
-Slightly modified version of [Gekkio/samsung-photo-frame-ctrl](https://github.com/Gekkio/samsung-photo-frame-ctrl)
+A Solution for Samsung photo frame based on [Gekkio/samsung-photo-frame-ctrl](https://github.com/Gekkio/samsung-photo-frame-ctrl)
 The intended use is to use Raspberry Pi Zero W in combination with Samsung photo frame to show photos downloaded from the Internet.
 
 The main differences are:
