@@ -1,0 +1,5 @@
+# merge must be turned on
+dynaconf_merge=true
+[LOADIMGARTSY]
+CLIENT_ID="<your-client-id>"
+CLIENT_SECRET="<your-secret>"
