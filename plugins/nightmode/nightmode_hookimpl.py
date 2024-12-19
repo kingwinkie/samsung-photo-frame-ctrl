@@ -5,12 +5,12 @@ from PIL import Image,  ImageDraw
 PLUGIN_NAME = "NIGHTMODE"
 
 def setMode(app):
+    global lastImage
     mode = app.nightmode.getMode()
     if mode == Nightmode.MODE.NIGHT:
-        image = Image.new('RGBA', app.cfg.FRAME.IMG_SIZE , (10,0,0,255-(255*app.cfg[PLUGIN_NAME].NIGHT_BRIGHTNESS//100)))
-        # Initialize the drawing context
-        draw = ImageDraw.Draw(image)
-        app.image = imgutils.pasteImage(bgImage=app.image, fgImage=image)
+        app.setBrightness(brightness=app.nightmode.nightBrightness, color=(10,0,0))
+    else:
+        app.setBrightness(brightness=255, color=(0,0,0))
     app.nightmode.lastMode = mode
 
 
@@ -37,8 +37,7 @@ def imageChangeBeforeEffects(app) -> None:
     """called after image was successfuly changed on the screen
     Intended for effects etc. Image is in app.image
     """
-    setMode(app)
-
+    
 
 @plugins.hookimpl
 def startup(app) -> None:
@@ -47,6 +46,8 @@ def startup(app) -> None:
     """
     app.nightmode = Nightmode()
     app.nightmode.createTT(app.cfg[PLUGIN_NAME].TIMES)
+    app.nightmode.app = app
+    app.nightmode.nightBrightness = app.cfg[PLUGIN_NAME].NIGHT_BRIGHTNESS
 
 @plugins.hookimpl
 def loadCfg(app) -> None:

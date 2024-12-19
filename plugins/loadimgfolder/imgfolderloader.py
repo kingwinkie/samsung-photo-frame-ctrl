@@ -47,16 +47,8 @@ class ImgLoaderRandom(ImgLoader):
 class LoaderFile(): # takes random file from a folder
         
     def loadFile(self, imgPath) :
-        picture = None
-        if not imgPath:
-            return None
-        try:
-            picture = open(imgPath,"rb")
-            LOGGER.debug(f"Loaded {imgPath}")
-        except:
-            LOGGER.error(f"{imgPath} can't be read!")
-            return None
-        return picture
+        if imgPath:
+          picture
     
 class ImgLoaderFolder(ImgLoaderRandom): # takes random file from a folder
     

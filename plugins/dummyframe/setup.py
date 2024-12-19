@@ -1,5 +1,6 @@
 from setuptools import setup
 
+PLUGIN_NAME = "DUMMYFRAME"
 
 setup(
     name="dummyFrame",

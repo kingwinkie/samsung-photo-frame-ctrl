@@ -4,7 +4,23 @@ WHOLE_DAY = 24*60*60
 class Nightmode:
     MODE = Enum("MODE",["DAY","NIGHT"])
     timeTable : list[tuple[int, MODE]] = []
+    nightBrightness : int # Nightmode brightness from settings
     lastMode : MODE = None #storage for the current mode
+    _forcedNightMode : bool = False #Nightmode is forced via remote controller
+    @property
+    def forcedNightMode(self):
+        return self._forcedNightMode
+    
+    @forcedNightMode.setter
+    def forcedNightMode(self, value : bool):
+        self._forcedNightMode = value
+        if value:
+            self.app.setBrightness(brightness=self.nightBrightness, color=(10,0,0))
+        else:
+            self.app.setBrightness(brightness=255, color=(0,0,0))
+        self.app.show()
+
+        
     @staticmethod
     def getSecOfDay(t : float = None):
         """ returns sec of the day"""
@@ -16,13 +32,14 @@ class Nightmode:
     
     def createTTRow(self, ttStr : tuple[str, str]) -> tuple[int, MODE]:
         """expects tuple in format ("13:57","DAY") or ("01:02 AM","NIGHT")"""
+        t : time.struct_time = None
         #convert time to nr. of seconds from 00:00
+        securedt = ttStr[0]+" 1970/01/01"
         try: #first try 24h format
-            t = time.strptime(ttStr[0], "%H:%M")
+            t = time.strptime(securedt, "%H:%M %Y/%m/%d")
         except ValueError:
             #NOW try 12h format
-            t = time.strptime(ttStr[0], "%I:%M %p")
-
+            t = time.strptime(securedt, "%I:%M %p %Y/%m/%d")
         secsSinceMidnight = self.getSecOfDay(time.mktime(t))
         return int(secsSinceMidnight), self.MODE[ttStr[1].upper()]
     
@@ -41,6 +58,7 @@ class Nightmode:
 
     def getMode(self, t : float = None):
         """ returns mode according to time table"""
+        if self._forcedNightMode: return self.MODE.NIGHT #Night mode has been forced by remote controller
         secOfDay = self.getSecOfDay( t )
         mode = next( tt for tt in self.timeTable if tt[0]< secOfDay )[1]
         return mode

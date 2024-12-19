@@ -55,3 +55,10 @@ def showImage(app) -> bool:
 def imageChangeBeforeEffects(app):
     """For post-effects aka NightMode. Called after imageChangeBefore and before showImage. Intended use is for global filters.
     """
+
+@hookspec
+def brightnessChangeAfter(app, brightness : int) -> None:
+    """called after brightness value was changed. Brightness is 0-255
+    Intended as a feedback for remote
+    """
+

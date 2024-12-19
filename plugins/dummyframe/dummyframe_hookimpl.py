@@ -1,7 +1,7 @@
 import plugins
 import slideshow
 import dummyframe
-
+PLUGIN_NAME = "DUMMYFRAME"
 @plugins.hookimpl
 def imageChangeAfter(app : slideshow.SlideShow) -> None:
     """called after image was successfuly changed on the screen

@@ -1,3 +1,4 @@
+setuptools
 pyusb
 pillow
 pycurl
@@ -7,3 +8,4 @@ netifaces
 pluggy
 pygame
 dynaconf
+remi

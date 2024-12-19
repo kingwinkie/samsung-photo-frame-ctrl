@@ -47,7 +47,7 @@ def do(app : SlideShow) -> None:
     now = clocks.getTime()
     if now != clocks.shownTime:
         clocks.showTime()
-        app.sendToFrame()
+        app.show()
 
 @plugins.hookimpl
 def loadCfg(app) -> None:
