@@ -61,4 +61,10 @@ def brightnessChangeAfter(app, brightness : int) -> None:
     """called after brightness value was changed. Brightness is 0-255
     Intended as a feedback for remote
     """
+@hookspec
+def ResizeBefore(app):
+    """Called before resize"""
 
+@hookspec
+def ResizeAfter(app):
+    """Called after resize"""

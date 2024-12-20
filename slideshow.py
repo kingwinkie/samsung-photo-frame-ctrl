@@ -6,12 +6,23 @@ import imgutils as imgutils
 import time
 import plugins
 from os import path as osp
-from PIL import Image, ImageDraw
+from PIL import Image
 from dynaconf import Dynaconf,loaders
 from dynaconf.utils.boxing import DynaBox
 import plugins.hookspecs as hookspecs
+from enum import IntEnum
 
 class SlideShow:
+    class Stage(IntEnum):
+        LOAD = 0
+        RESIZE = 1
+        SHOW = 2
+        IDLE = 3
+        def nextStage(self):
+            newStage = SlideShow.Stage((self+1)%len(SlideShow.Stage))
+            LOGGER.debug(f"New Stage: {newStage.name}")
+            return newStage
+            
     image : Image = None # current image
     loadedImage : Image = None # image as it has been loaded
     imgLoader = None # active loader 
@@ -24,6 +35,7 @@ class SlideShow:
     paused : bool = False # paused via remote
     forceLoad : bool = False # load request via remote 
     idleIter : int = 0 # Idle iterator. Set in Show() because plugins may change it
+    stage : Stage = Stage.LOAD # Current stage. Stages are : 0 = load, 1 = resize, 2 = show, 3 = idle
 
     @property
     def brightness(self):
@@ -35,7 +47,7 @@ class SlideShow:
         """Calls do() in plugins"""
         wait = 1 # wait 1s
         self.idleIter : int = 0
-        while self.idleIter < self.delay or self.paused:
+        while (self.idleIter < self.delay or self.paused) and self.stage == self.Stage.IDLE:
             self.idleIter += wait
             start = time.time()
             self.pm.hook.do(app=self) #call plugins
@@ -56,8 +68,10 @@ class SlideShow:
         """Shows the image at defined frames"""
         self.imageBeforeEffects = self.image
         self.pm.hook.imageChangeBeforeEffects(app=self) # call effect plugins here (for nightmode etc.)
+        if (self.image.size != tuple(self.cfg.FRAME.IMG_SIZE)): # final size check. Wrong size can break the frame
+            self.image = imgutils.resize_and_centerImg(self.image, self.cfg.FRAME.IMG_SIZE)
         ret : list[bool] = self.pm.hook.showImage(app=self)
-        if ret and len(ret)>0 and ret[0]: 
+        if ret and any(ret): 
             return True
     
     
@@ -71,21 +85,15 @@ class SlideShow:
             ...
         else:
             image = Image.new('RGBA', self.cfg.FRAME.IMG_SIZE , self.brightnessMask)
-            # Initialize the drawing context
-            ImageDraw.Draw(image)
             self.image = imgutils.pasteImage(bgImage=self.image, fgImage=image)
         self.pm.hook.brightnessChangeAfter(app=self, brightness=brightness)
 
     def show(self):
-        if self.loadedImage:
-            self.image = self.loadedImage
             self.pm.hook.imageChangeBefore(app=self)
             self.setBrightness(self.brightness)
-            self.idleIter = 0
             if self.sendToFrame():
                 self.pm.hook.imageChangeAfter(app=self)
                 return True
-
     
     
     def setLoader(self):
@@ -97,29 +105,46 @@ class SlideShow:
         return self.imgLoader
 
 
-    def loadImg(self, buffer : bytes = None) -> bool:
+    def load(self, buffer : bytes = None) -> bool:
+        """loads a new image. Buffer is here to force a specific image from plugins"""
         if not buffer:
             buffer = self.imgLoader.load()
-        if buffer:
-            self.loadedImage = imgutils.resize_and_center(buffer, self.cfg.FRAME.IMG_SIZE)
-            self.forceLoad = False #new image has been loaded
-            if self.loadedImage: return True
-        return False
+        self.loadedImage = imgutils.bytes2img(buffer)
+        self.forceLoad = False #new image has been loaded or it failed
+        return True #must returns True if success because of plugins
+
+    def resize(self):
+        """Resize to fit the frame"""
+        ret = self.pm.hook.ResizeBefore(app=self)
+        if ret and any(ret): #at least one ResizeBefore returned True
+            self.resizedImage = self.image
+        else:
+            self.resizedImage = imgutils.resize_and_centerImg(self.image, self.cfg.FRAME.IMG_SIZE)
+        self.image = self.resizedImage
+        self.pm.hook.ResizeAfter(app=self)
+
+    def setStage(self, stage : int ):
+        """For calling from plugins. Sets correct image for the stage"""
+        if stage == self.Stage.RESIZE:
+            self.image = self.loadedImage
+        if stage == self.Stage.SHOW:
+            self.image = self.resizedImage
+        self.stage = self.Stage(stage)
+        LOGGER.debug(f"New stage SET {self.stage.name}")
 
     def stages(self):
         """stage manager. Route is load -> show -> idle"""
         while not self.quit:
-            # load stage
-            self.loadImg()
-            # show stage
-            if self.show(): 
-                #idle stage
+            if self.stage == self.Stage.LOAD:
+                self.load()
+            elif self.stage == self.Stage.RESIZE:
+                self.resize()
+            elif self.stage == self.Stage.SHOW:
+                if not self.show(): 
+                    time.sleep(10) #connection lost. Request was too fast etc.
+            elif self.stage == self.Stage.IDLE:
                 self.idle()
-                if self.quit: return #quit was rerquested from a plugin
-            else:
-                time.sleep(10) #connection lost. Request was too fast etc.
-                self.idle(self.delay)
-
+            self.setStage(self.stage.nextStage())
 
     def saveCfg(self, path):
         data = self.cfg.as_dict()

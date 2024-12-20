@@ -12,6 +12,7 @@ def setMode(app):
     else:
         app.setBrightness(brightness=255, color=(0,0,0))
     app.nightmode.lastMode = mode
+    app.setStage(app.Stage.RESIZE)
 
 
 @plugins.hookimpl

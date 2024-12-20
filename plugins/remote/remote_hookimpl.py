@@ -27,7 +27,7 @@ class Remote:
 
     def on_brightness_changed(self, widget, value):
         self.app.setBrightness(int(value))
-        self.app.show()
+        self.app.setStage(self.app.Stage.RESIZE)
 
     def setBrightnessFB(self, brightness : int):
             remote.brightnessFB(brightness)
@@ -48,8 +48,8 @@ class Remote:
         try:
             with open(fileName,"rb") as picture:
                 LOGGER.debug(f"Loaded {picture}")
-                if self.app.loadImg(buffer=picture):
-                    self.app.show()
+                if self.app.load(buffer=picture):
+                    self.app.setStage(self.app.Stage.LOAD)
         except:
             LOGGER.error(f"{fileName} can't be read!")
     def fileupload_on_success(self,widget, fileName):
