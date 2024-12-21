@@ -1,16 +1,28 @@
 import plugins
 import remote
 import logging as LOGGER
+import qrcode
+import getips
+from imgutils import drawText, HAlign, VAlign
 PLUGIN_NAME = "REMOTE"
 
 
 class Remote:
     serverApp : remote.RemoteWeb = None
-
+    serverUrl : str # URL of the server
+    initialRun : bool = True #for showing the QR code. 
+    fileName : str #name of the last file
     def start(self, app):
         self.app = app
-        remote.startWeb(caller=self, address=app.cfg[PLUGIN_NAME].address, port=int(app.cfg[PLUGIN_NAME].port))
-
+        address = app.cfg[PLUGIN_NAME].address
+        port = int(app.cfg[PLUGIN_NAME].port)
+        if address in ["*", "", None]:
+            addrList = getips.getIPList()
+            if addrList and len(addrList) > 0: 
+                address = addrList[0]
+        self.serverUrl = f"http://{address}:{port}"
+        remote.startWeb(caller=self, address=address, port=port)
+        
     def on_init(self, serverApp : remote.RemoteWeb):
         """called from remote.RemoteWeb main after initialisation
         Place for setting initail values on the web
@@ -44,16 +56,14 @@ class Remote:
         self.app.delay = float(value)
 
 
-    def showFile(self,fileName):
-        try:
-            with open(fileName,"rb") as picture:
-                LOGGER.debug(f"Loaded {picture}")
-                if self.app.load(buffer=picture):
-                    self.app.setStage(self.app.Stage.LOAD)
-        except:
-            LOGGER.error(f"{fileName} can't be read!")
-    def fileupload_on_success(self,widget, fileName):
-        self.showFile(fileName)
+    def showFile(self,fullpath, fileName):
+            if self.app.load(fullpath): #lazy !!!
+                self.app.remotelyUploaded = True #informs other plugins that the picture has been remotely uploaded
+                self.fileName = fileName
+                self.app.setStage(self.app.Stage.LOAD)
+                
+    def fileupload_on_success(self,widget, fullpath, fileName):
+        self.showFile(fullpath, fileName)
 
     def on_file_upload_input(self, widget, file_list):
         # Get the uploaded file
@@ -84,6 +94,28 @@ def imageChangeBefore(app) -> None:
     """called after image was successfuly changed on the screen
     Intended for effects etc. Image is in app.image
     """
+    if app.remote.initialRun:
+        qr = qrcode.QRCode(version=1,
+                        error_correction=qrcode.constants.ERROR_CORRECT_L,
+                        box_size=7,
+                        border=4)
+        qr.add_data(app.remote.serverUrl)
+        LOGGER.debug(f"QR created {app.remote.serverUrl}")
+        qr.make()
+        #qrcode_fill_color = '#%02x%02x%02x' % cfg.gettyped("QRCODE", 'foreground')
+        #qrcode_background_color = '#%02x%02x%02x' % cfg.gettyped("QRCODE", 'background')
+        qrImage = qr.make_image()
+        if qrImage:
+            LOGGER.debug(f"QR paste")
+            app.image.paste(im=qrImage.get_image())
+        else:
+            LOGGER.error(f"QR creation error")
+        app.remote.initialRun = False
+    # add image name
+    if app.remotelyUploaded and app.remote.fileName:
+        text=f"{app.remote.fileName}"
+        app.image = drawText(text=text, size=app.cfg.FRAME.IMG_SIZE, fontSize=12, textColor=(192,192,192,192), align=(HAlign.RIGHT, VAlign.BOTTOM), bgImage=app.image, offset=(10,5))
+
 
 @plugins.hookimpl
 def startup(app) -> None:

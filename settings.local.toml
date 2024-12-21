@@ -16,3 +16,7 @@ ACTIVE = [
         ["23:40", "night"],
         ]
     "NIGHT_BRIGHTNESS" = 10
+
+[REMOTE]
+ADDRESS="localhost"
+PORT=8088

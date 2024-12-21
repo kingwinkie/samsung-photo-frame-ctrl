@@ -66,7 +66,7 @@ class RemoteWeb(remi.App):
     def fileupload_on_success(self, widget, filename):
         self.lbl.set_text('Photo upload success: ' + filename)
         fullPath : str = os.path.join(self.uploadPath, filename)
-        self.caller.fileupload_on_success(widget, fullPath)
+        self.caller.fileupload_on_success(widget, fullPath, filename)
         try:
             os.remove(fullPath) # remove downloaded file
         except OSError as e:

@@ -17,7 +17,7 @@ class Clocks:
     def showTime(self):
         size = self.app.cfg.FRAME.IMG_SIZE
         text : str = self.getTime()
-        self.app.image = imgutils.drawText(text=text, size=size, fontSize=200, textColor=(255,255,255,255), align=(imgutils.HAlign.CENTER, imgutils.VAlign.CENTER), bgImage=self.currentImage)
+        self.app.image = imgutils.drawText(text=text, size=size, fontSize=200, textColor=(255,255,255,255), align=(imgutils.HAlign.CENTER, imgutils.VAlign.CENTER), bgImage=self.app.image)
         self.shownTime = text
 
 
@@ -46,8 +46,7 @@ def do(app : SlideShow) -> None:
     clocks : Clocks = app.clocksPlugin
     now = clocks.getTime()
     if now != clocks.shownTime:
-        clocks.showTime()
-        app.show()
+        app.setStage(app.Stage.RESIZE)
 
 @plugins.hookimpl
 def loadCfg(app) -> None:

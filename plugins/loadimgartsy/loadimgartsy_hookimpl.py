@@ -8,10 +8,10 @@ PLUGIN_NAME = "LOADIMGARTSY"
 
 @plugins.hookimpl
 def imageChangeBefore(app):
-    artsyImgLoader : ImgLoaderArtsy = app.artsyImgLoader
-    text=f"{artsyImgLoader.artwork['slug']} ({artsyImgLoader.artwork['date']})"
-    app.image = drawText(text=text, size=artsyImgLoader.size, fontSize=12, textColor=(192,192,192,192), align=(HAlign.RIGHT, VAlign.BOTTOM), bgImage=app.image, offset=(10,5))
-    return None
+    if not app.remotelyUploaded:
+        artsyImgLoader : ImgLoaderArtsy = app.artsyImgLoader
+        text=f"{artsyImgLoader.artwork['slug']} ({artsyImgLoader.artwork['date']})"
+        app.image = drawText(text=text, size=artsyImgLoader.size, fontSize=12, textColor=(192,192,192,192), align=(HAlign.RIGHT, VAlign.BOTTOM), bgImage=app.image, offset=(10,5))
 
 @plugins.hookimpl
 def startup(app):

@@ -7,12 +7,8 @@ PLUGIN_NAME = "NIGHTMODE"
 def setMode(app):
     global lastImage
     mode = app.nightmode.getMode()
-    if mode == Nightmode.MODE.NIGHT:
-        app.setBrightness(brightness=app.nightmode.nightBrightness, color=(10,0,0))
-    else:
-        app.setBrightness(brightness=255, color=(0,0,0))
+    app.nightmode.setMode(mode)
     app.nightmode.lastMode = mode
-    app.setStage(app.Stage.RESIZE)
 
 
 @plugins.hookimpl

@@ -36,7 +36,7 @@ class SlideShow:
     forceLoad : bool = False # load request via remote 
     idleIter : int = 0 # Idle iterator. Set in Show() because plugins may change it
     stage : Stage = Stage.LOAD # Current stage. Stages are : 0 = load, 1 = resize, 2 = show, 3 = idle
-
+    remotelyUploaded : bool = False # The picture has been uploaded remotely via RC. Info for plugins
     @property
     def brightness(self):
         return 255-self.brightnessMask[3]
@@ -107,6 +107,8 @@ class SlideShow:
 
     def load(self, buffer : bytes = None) -> bool:
         """loads a new image. Buffer is here to force a specific image from plugins"""
+        self.remotelyUploaded = False #turn the flag off
+        self.idleIter = 0
         if not buffer:
             buffer = self.imgLoader.load()
         self.loadedImage = imgutils.bytes2img(buffer)
@@ -133,7 +135,7 @@ class SlideShow:
         LOGGER.debug(f"New stage SET {self.stage.name}")
 
     def stages(self):
-        """stage manager. Route is load -> show -> idle"""
+        """stage manager. Route is: load -> resize -> show -> idle"""
         while not self.quit:
             if self.stage == self.Stage.LOAD:
                 self.load()

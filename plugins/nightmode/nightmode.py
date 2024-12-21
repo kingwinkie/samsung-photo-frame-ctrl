@@ -14,13 +14,16 @@ class Nightmode:
     @forcedNightMode.setter
     def forcedNightMode(self, value : bool):
         self._forcedNightMode = value
-        if value:
+        self.setMode(Nightmode.MODE.NIGHT if value else Nightmode.MODE.DAY)
+
+    def setMode(self, mode : MODE):    
+        if mode == Nightmode.MODE.NIGHT:
             self.app.setBrightness(brightness=self.nightBrightness, color=(10,0,0))
         else:
             self.app.setBrightness(brightness=255, color=(0,0,0))
-        self.app.show()
+        self.app.nightmode.lastMode = mode
+        self.app.setStage(self.app.Stage.RESIZE)
 
-        
     @staticmethod
     def getSecOfDay(t : float = None):
         """ returns sec of the day"""
@@ -67,7 +70,7 @@ class Nightmode:
         """returns mode string. For calling from other plugins"""
         if not mode:
             mode = self.lastMode
-        return mode.name
+        return mode.name if mode else 'DAY'
         
                                   
 
