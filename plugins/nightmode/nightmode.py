@@ -6,15 +6,16 @@ class Nightmode:
     timeTable : list[tuple[int, MODE]] = []
     nightBrightness : int # Nightmode brightness from settings
     lastMode : MODE = None #storage for the current mode
-    _forcedNightMode : bool = False #Nightmode is forced via remote controller
+    lastTTMode : MODE = None #storage for the current TT mode
+    _forcedMode : bool = False #Nightmode is forced via remote controller
     @property
-    def forcedNightMode(self):
-        return self._forcedNightMode
+    def forcedMode(self):
+        return self._forcedMode
     
-    @forcedNightMode.setter
-    def forcedNightMode(self, value : bool):
-        self._forcedNightMode = value
-        self.setMode(Nightmode.MODE.NIGHT if value else Nightmode.MODE.DAY)
+    @forcedMode.setter
+    def forcedMode(self, mode : MODE):
+        self._forcedMode = mode
+        self.setMode(mode)
 
     def setMode(self, mode : MODE):    
         if mode == Nightmode.MODE.NIGHT:
@@ -59,12 +60,24 @@ class Nightmode:
             self.timeTable.insert(0,(0,lastMode))
         self.timeTable.sort(key=lambda x:x[0], reverse=True) # I need the table in reverse order for getMode
 
-    def getMode(self, t : float = None):
+    def checkTTModeChange(self):
+        """Checks if there was a Time Table mode change since the last call. If so clears forceMode flag."""
+        mode = self.getModeFromTT()
+        if self.lastTTMode and self.lastTTMode != mode:
+            # TT mode has been changed. Clear forced mode.
+            self.forcedMode = None
+        self.lastTTMode = mode
+
+    def getModeFromTT(self, t : float = None) -> MODE:
         """ returns mode according to time table"""
-        if self._forcedNightMode: return self.MODE.NIGHT #Night mode has been forced by remote controller
         secOfDay = self.getSecOfDay( t )
         mode = next( tt for tt in self.timeTable if tt[0]< secOfDay )[1]
         return mode
+    
+    def getMode(self, t : float = None) -> MODE:
+        """ returns mode according to time table"""
+        if self.forcedMode: return self.forcedMode #Mode has been forced by remote controller
+        return self.getModeFromTT(t)
             
     def getModeStr(self, mode : MODE = None) -> str:
         """returns mode string. For calling from other plugins"""

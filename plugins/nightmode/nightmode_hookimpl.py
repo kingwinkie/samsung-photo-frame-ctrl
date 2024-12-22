@@ -7,6 +7,7 @@ PLUGIN_NAME = "NIGHTMODE"
 def setMode(app):
     global lastImage
     mode = app.nightmode.getMode()
+    app.nightmode.checkTTModeChange()
     app.nightmode.setMode(mode)
     app.nightmode.lastMode = mode
 

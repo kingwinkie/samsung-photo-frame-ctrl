@@ -1,4 +1,4 @@
-from PIL import Image, UnidentifiedImageError, ImageDraw, ImageFont
+from PIL import Image, UnidentifiedImageError, ImageDraw, ImageFont, ImageOps
 import io
 from enum import Enum
 import logging as LOGGER
@@ -50,6 +50,12 @@ def imgToBytes(img : Image.Image) -> bytes:
         b=io.BytesIO()
         img.save(b, "JPEG", quality=94)
         return b.getbuffer()
+
+def exifTranspose(img : Image.Image) -> Image.Image:
+    """rotates image according to EXIF data"""
+    return ImageOps.exif_transpose(img)
+        
+
 
 def resize_and_center(file,targetSize : tuple[int,int],**kwargs) -> Image.Image:
     """file is filename or bytes or readbuffer (Python 3.9 on Pi can't process '|')"""

@@ -33,8 +33,8 @@ class Remote:
     
     def on_bt_nightmode_pressed(self, widget):
         if hasattr(self.app,"nightmode"):
-            self.app.nightmode.forcedNightMode = not self.app.nightmode.forcedNightMode
-            text = 'Day Mode' if self.app.nightmode.forcedNightMode else 'Night Mode'
+            self.app.nightmode.forcedMode = self.app.nightmode.MODE.DAY if self.app.nightmode.getMode() == self.app.nightmode.MODE.NIGHT else self.app.nightmode.MODE.NIGHT
+            text = 'Day Mode' if self.app.nightmode.getMode() == self.app.nightmode.MODE.NIGHT else 'Night Mode'
             remote.nightmodeSetText(text)
 
     def on_brightness_changed(self, widget, value):

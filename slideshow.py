@@ -11,6 +11,7 @@ from dynaconf import Dynaconf,loaders
 from dynaconf.utils.boxing import DynaBox
 import plugins.hookspecs as hookspecs
 from enum import IntEnum
+import threading
 
 class SlideShow:
     class Stage(IntEnum):
@@ -37,12 +38,16 @@ class SlideShow:
     idleIter : int = 0 # Idle iterator. Set in Show() because plugins may change it
     stage : Stage = Stage.LOAD # Current stage. Stages are : 0 = load, 1 = resize, 2 = show, 3 = idle
     remotelyUploaded : bool = False # The picture has been uploaded remotely via RC. Info for plugins
+    cond : threading.Condition #notify for idle sleep 
     @property
     def brightness(self):
         return 255-self.brightnessMask[3]
     def quitApp(self, quit = True):
         self.quit = quit
 
+    def __init__(self):
+        self.cond = threading.Condition()
+    
     def idle(self):
         """Calls do() in plugins"""
         wait = 1 # wait 1s
@@ -56,7 +61,8 @@ class SlideShow:
             if self.quit: return
             if self.forceLoad: return
             if waitD > 0:
-                time.sleep(waitD)
+                with self.cond:
+                    self.cond.wait(waitD)
             
     def get_plugin_manager(self):
         self.pm = plugins.FramePluginManager("slideshow")
@@ -112,6 +118,7 @@ class SlideShow:
         if not buffer:
             buffer = self.imgLoader.load()
         self.loadedImage = imgutils.bytes2img(buffer)
+        self.loadedImage = imgutils.exifTranspose(self.loadedImage)
         self.forceLoad = False #new image has been loaded or it failed
         return True #must returns True if success because of plugins
 
@@ -132,6 +139,9 @@ class SlideShow:
         if stage == self.Stage.SHOW:
             self.image = self.resizedImage
         self.stage = self.Stage(stage)
+        with self.cond: 
+            self.cond.notify_all() #inform idle sleep if the stage change request was started from a different thread
+
         LOGGER.debug(f"New stage SET {self.stage.name}")
 
     def stages(self):
