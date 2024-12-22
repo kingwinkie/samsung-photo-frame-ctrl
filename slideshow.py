@@ -12,6 +12,7 @@ from dynaconf.utils.boxing import DynaBox
 import plugins.hookspecs as hookspecs
 from enum import IntEnum
 import threading
+import remi
 
 class SlideShow:
     class Stage(IntEnum):
@@ -48,10 +49,14 @@ class SlideShow:
     def __init__(self):
         self.cond = threading.Condition()
     
+    def createRemote(self) -> list[list[remi.Widget]]:
+        """Called from remote (if exists). For setting remote UI in plugins"""
+        widgets = self.pm.hook.setRemote(app=self) #call plugins
+        return widgets
+
     def idle(self):
         """Calls do() in plugins"""
         wait = 1 # wait 1s
-        self.idleIter : int = 0
         while (self.idleIter < self.delay or self.paused) and self.stage == self.Stage.IDLE:
             self.idleIter += wait
             start = time.time()

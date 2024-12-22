@@ -3,6 +3,7 @@ import remote
 import logging as LOGGER
 import qrcode
 import getips
+import remi
 from imgutils import drawText, HAlign, VAlign
 PLUGIN_NAME = "REMOTE"
 
@@ -22,7 +23,8 @@ class Remote:
                 address = addrList[0]
         self.serverUrl = f"http://{address}:{port}"
         remote.startWeb(caller=self, address=address, port=port)
-        
+    def createRemote(self) -> list[list[remi.Widget]]:
+        return self.app.createRemote()
     def on_init(self, serverApp : remote.RemoteWeb):
         """called from remote.RemoteWeb main after initialisation
         Place for setting initail values on the web
@@ -31,11 +33,9 @@ class Remote:
         remote.delayTxtFB(self.app.delay)
         remote.brightnessFB(self.app.brightness)
     
-    def on_bt_nightmode_pressed(self, widget):
-        if hasattr(self.app,"nightmode"):
-            self.app.nightmode.forcedMode = self.app.nightmode.MODE.DAY if self.app.nightmode.getMode() == self.app.nightmode.MODE.NIGHT else self.app.nightmode.MODE.NIGHT
-            text = 'Day Mode' if self.app.nightmode.getMode() == self.app.nightmode.MODE.NIGHT else 'Night Mode'
-            remote.nightmodeSetText(text)
+    def update(self, func, **kwargs):
+        return self.serverApp.update(func, **kwargs)
+
 
     def on_brightness_changed(self, widget, value):
         self.app.setBrightness(int(value))

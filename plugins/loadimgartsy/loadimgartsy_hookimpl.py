@@ -1,7 +1,6 @@
 import plugins
 from loadimg import ImgLoader
 from imgaloader import ImgLoaderArtsy
-from imgutils import bytes2img, imgToBytes
 from imgutils import drawText, HAlign, VAlign
 
 PLUGIN_NAME = "LOADIMGARTSY"
@@ -10,8 +9,7 @@ PLUGIN_NAME = "LOADIMGARTSY"
 def imageChangeBefore(app):
     if not app.remotelyUploaded:
         artsyImgLoader : ImgLoaderArtsy = app.artsyImgLoader
-        text=f"{artsyImgLoader.artwork['slug']} ({artsyImgLoader.artwork['date']})"
-        app.image = drawText(text=text, size=artsyImgLoader.size, fontSize=12, textColor=(192,192,192,192), align=(HAlign.RIGHT, VAlign.BOTTOM), bgImage=app.image, offset=(10,5))
+        app.image = drawText(text=artsyImgLoader.description, size=artsyImgLoader.size, fontSize=12, textColor=(192,192,192,192), align=(HAlign.RIGHT, VAlign.BOTTOM), bgImage=app.image, offset=(10,5))
 
 @plugins.hookimpl
 def startup(app):

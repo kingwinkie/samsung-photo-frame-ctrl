@@ -1,11 +1,8 @@
 import plugins
-import imgutils
 from nightmode import Nightmode
-from PIL import Image,  ImageDraw
 PLUGIN_NAME = "NIGHTMODE"
 
 def setMode(app):
-    global lastImage
     mode = app.nightmode.getMode()
     app.nightmode.checkTTModeChange()
     app.nightmode.setMode(mode)
@@ -43,9 +40,11 @@ def startup(app) -> None:
     Placeholder for plugin initialisation
     """
     app.nightmode = Nightmode()
-    app.nightmode.createTT(app.cfg[PLUGIN_NAME].TIMES)
+    app.nightmode.srcTable = app.cfg[PLUGIN_NAME].TIMES
+    app.nightmode.createTT(app.nightmode.srcTable)
     app.nightmode.app = app
     app.nightmode.nightBrightness = app.cfg[PLUGIN_NAME].NIGHT_BRIGHTNESS
+    app.nightmode.lastMode = Nightmode.MODE.DAY
 
 @plugins.hookimpl
 def loadCfg(app) -> None:
@@ -64,6 +63,7 @@ def do(app) -> None:
     """called every second when frame is waiting to next frame.
     Intended for showing real time etc.
     """
+    app.nightmode.checkTTModeChange()
     if app.nightmode.lastMode != app.nightmode.getMode():
         setMode(app)
 
@@ -71,3 +71,10 @@ def do(app) -> None:
 def showImage(app) -> bool:
     """called when a new image should be shown. Intended use is for display plugins. Returns success or failure.
     """
+
+
+@plugins.hookimpl
+def setRemote(app):
+    """For setting web based remote from plugins. Returns list of remi.Widgets"""
+    return app.nightmode.setRemote()
+    

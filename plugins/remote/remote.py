@@ -21,10 +21,7 @@ class RemoteWeb(remi.App):
         # the arguments are	width - height - layoutOrientationOrizontal
         subContainerRight = gui.Container(style={'width': '220px', 'display': 'block', 'overflow': 'auto', 'text-align': 'center'})
         self.lbl = gui.Label('Photo Frame started', width=200, height=30, margin='10px')
-        self.bt_nightmode = gui.Button('Night Mode', width=200, height=30)
-        # setting the listener for the onclick event of the button
-        self.bt_nightmode.onclick.do(self.caller.on_bt_nightmode_pressed)
-
+        
         self.slider_brightness_lbl = gui.Label('Brightness', width=200, height=20, margin_top='10px')
         self.slider_brightness = gui.Slider(255, 0, 255, 15, width=200, height=10, margin='1px')
         self.slider_brightness.onchange.do(self.caller.on_brightness_changed)
@@ -44,16 +41,22 @@ class RemoteWeb(remi.App):
         self.uploadPath = os.path.join(realPath,"uploads")
         if not os.path.isdir(self.uploadPath):
             os.mkdir(self.uploadPath)
-        self.inputUploadPhoto=gui.Input(type='file', accept='image/*', attributes={'capture': 'camera'})
+        self.inputUploadPhoto=gui.Input(type='file', accept='image/*', capture="environment", attributes={'capture': 'camera'})
         self.inputUploadPhoto.onchange.do(self.caller.on_file_upload_input)
         self.btUploadPhoto = gui.FileUploader(self.uploadPath, width=200, height=30, margin='10px',accepted_files='*.jpg')
         self.btUploadPhoto.onsuccess.do(self.fileupload_on_success)
         self.btUploadPhoto.onfailed.do(self.fileupload_on_failed)
 
-        subContainerLeft.append([self.bt_nightmode, self.slider_brightness_lbl, self.slider_brightness, self.btUploadPhoto, self.inputUploadPhoto])
+        #subContainerLeft.append(self.bt_nightmode)
+        subContainerLeft.append([self.slider_brightness_lbl, self.slider_brightness, self.btUploadPhoto, self.inputUploadPhoto])
+        
         subContainerRight.append([ self.bt_pause,self.bt_load,self.delayTxt_lbl,self.delayTxt])
         horizontalContainer.append([subContainerLeft, subContainerRight])
         verticalContainer.append([self.lbl, horizontalContainer])
+        plugins : list[list[remi.Widget]]= self.caller.createRemote()
+        for plugin in plugins:
+            if plugin:
+                subContainerLeft.append(plugin)
 
         self.caller.on_init(self)
         # returning the root widget
@@ -79,7 +82,11 @@ class RemoteWeb(remi.App):
                 #do the update
                 func(**kwargs)
 
+    def update(self, func, **kwargs):
+        self.secureUpdate(func, **kwargs)
+
 server : RemoteWeb = None
+
 
 def nightmodeSetText(text : str):
     if server:

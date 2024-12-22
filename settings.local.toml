@@ -12,8 +12,8 @@ ACTIVE = [
 ]
 
 [NIGHTMODE]
-    "TIMES" = [["08:00", "day"],
-        ["23:40", "night"],
+    "TIMES" = [["12:36", "night"],
+        ["12:37", "day"],
         ]
     "NIGHT_BRIGHTNESS" = 10
 

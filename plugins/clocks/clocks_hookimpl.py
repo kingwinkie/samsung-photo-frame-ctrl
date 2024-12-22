@@ -1,30 +1,45 @@
 import plugins
 import imgutils
 from slideshow import SlideShow
-from loadimg import ImgLoader
 
 from PIL import Image
 import time
+import remi.gui as gui
 
 PLUGIN_NAME = "CLOCKS"
 class Clocks:
     currentImage : Image
     app : SlideShow
     shownTime : str = ""
+    textColor : str = "#F5F5DC"
+    fontSize : int = 200
     def getTime(self) -> str:
         text : str = time.strftime('%H:%M' if self.app.cfg.CLOCKS.FORMAT == "24h" else '%l:%M')
         return text
     def showTime(self):
         size = self.app.cfg.FRAME.IMG_SIZE
         text : str = self.getTime()
-        self.app.image = imgutils.drawText(text=text, size=size, fontSize=200, textColor=(255,255,255,255), align=(imgutils.HAlign.CENTER, imgutils.VAlign.CENTER), bgImage=self.app.image)
+        self.app.image = imgutils.drawText(text=text, size=size, fontSize=self.fontSize, textColor=self.textColor, align=(imgutils.HAlign.CENTER, imgutils.VAlign.CENTER), bgImage=self.app.image)
         self.shownTime = text
 
+    def setRemote(self):
+        
+        self.remote_colorPicker = gui.ColorPicker(default_value=self.textColor)
+        self.remote_fontSize = gui.Slider(self.fontSize, 50, 500, 10, width=200, height=10, margin='1px')
+            
+        # setting the listener for the onclick event of the button
+        self.remote_colorPicker.onchange.do(self.on_remote_colorPicker_changed)
+        self.remote_fontSize.onchange.do(self.on_remote_fontSize_changed)
+        return [self.remote_colorPicker, self.remote_fontSize]
+    
+    def on_remote_colorPicker_changed(self, widget, value):
+        self.textColor = value
+        self.app.setStage(self.app.Stage.RESIZE)
+    
+    def on_remote_fontSize_changed(self, widget, value):
+        self.fontSize = int(value)
+        self.app.setStage(self.app.Stage.RESIZE)
 
-
-@plugins.hookimpl
-def imageChangeAfter(app):
-    return None
 
 @plugins.hookimpl
 def startup(app):
@@ -59,3 +74,8 @@ def loadCfg(app) -> None:
         "FILL" : "white"
     }
     app.loadCfg(PLUGIN_NAME, defaultConfig)
+
+@plugins.hookimpl
+def setRemote(app):
+    """For setting web based remote from plugins. Returns list of remi.Widgets"""
+    return app.clocksPlugin.setRemote()
