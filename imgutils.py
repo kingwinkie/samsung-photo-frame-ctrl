@@ -5,33 +5,44 @@ import logging as LOGGER
 
 VAlign = Enum("VAlign",["TOP","CENTER","BOTTOM"])
 HAlign = Enum("HAlign",["LEFT","CENTER","RIGHT"])
+RMode = Enum("RMode",["SHRINK","ZOOM"]) # resize mode
 
-def resize_and_centerImg(img : Image.Image, targetSize : tuple[int,int], backcolor : str="black") -> Image.Image:
-    if not img: return None
-    new_img : Image.Image = None
-    # Calculate the aspect ratio of the image
-    img_ratio = img.width / img.height
-    target_ratio = targetSize[0] / targetSize[1]
+def ar(size : tuple[int, int]) -> float:
+    return size[0]/size[1]
 
-    # Determine new dimensions and position for the image
-    if img_ratio > target_ratio:
+def imgSizeCalc(imgSize : tuple[int, int], frameSize : tuple[int, int], rMode : RMode):
+     # Determine new dimensions and position for the image
+    frameAR = ar(frameSize)
+    imgAR  = ar(imgSize)
+    if (imgAR > frameAR and rMode == RMode.SHRINK) or (imgAR < frameAR and rMode == RMode.ZOOM) :
         # Image is wider relative to the target
-        newSize = targetSize[0], int(targetSize[0] / img_ratio)
+        newImgSize = frameSize[0], frameSize[0] * imgSize[1] // imgSize[0]
     else:
         # Image is taller relative to the target
-        newSize = int(targetSize[1] * img_ratio), targetSize[1]
+        newImgSize = int(frameSize[1] * imgSize[0] / imgSize[1]), frameSize[1]
+    return newImgSize
 
+def resizeCenterCalc(imgSize : tuple[int, int], frameSize : tuple[int, int], rMode : RMode):
+    # Calculate the image size
+    newSize = imgSizeCalc(imgSize, frameSize, rMode)
+    # Calculate position to paste the resized image onto the new image
+    pos = (frameSize[0] - newSize[0]) // 2, (frameSize[1] - newSize[1]) // 2
+    return newSize, pos
+
+def resize_and_centerImg(img : Image.Image, frameSize : tuple[int,int], backcolor : str="black", rMode : RMode = RMode.SHRINK) -> Image.Image:
+    if not img: return None
+    new_img : Image.Image = None
+    # Calculate the image
+    size, pos = resizeCenterCalc(imgSize=img.size, frameSize=frameSize, rMode=rMode)
     # Resize the image with the new dimensions while maintaining aspect ratio
-    resized_img = img.resize(newSize)
+    resized_img = img.resize(size)
 
     # Create a new image with the target size and white background
-    new_img = Image.new('RGB', targetSize, backcolor)
-
-    # Calculate position to paste the resized image onto the new image
-    paste = (targetSize[0] - newSize[0]) // 2, (targetSize[1] - newSize[1]) // 2
+    new_img = Image.new('RGB', frameSize, backcolor)
+    new_img.crop((0,0,*tuple(frameSize)))
 
     # Paste the resized image onto the new image
-    new_img.paste(resized_img, paste)
+    new_img.paste(resized_img, pos)
     return new_img
 
    
