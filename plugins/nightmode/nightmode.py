@@ -1,33 +1,38 @@
 import time
+import remi.gui as gui
+
 from enum import Enum
 WHOLE_DAY = 24*60*60
 class Nightmode:
     MODE = Enum("MODE",["DAY","NIGHT"])
     timeTable : list[tuple[int, MODE]] = []
     nightBrightness : int # Nightmode brightness from settings
-    lastMode : MODE = None #storage for the current mode
-    _forcedNightMode : bool = False #Nightmode is forced via remote controller
+    currentMode : MODE = None # current mode. May be set through TT or from remote
+    lastCheckTT : int = 0 # day timestamp (s) of the last check
     @property
-    def forcedNightMode(self):
-        return self._forcedNightMode
+    def forcedMode(self):
+        return self._forcedMode
     
-    @forcedNightMode.setter
-    def forcedNightMode(self, value : bool):
-        self._forcedNightMode = value
-        if value:
+    @forcedMode.setter
+    def forcedMode(self, mode : MODE):
+        self._forcedMode = mode
+        self.setMode(mode)
+
+    def setMode(self, mode : MODE):    
+        if mode == Nightmode.MODE.NIGHT:
             self.app.setBrightness(brightness=self.nightBrightness, color=(10,0,0))
         else:
             self.app.setBrightness(brightness=255, color=(0,0,0))
-        self.app.show()
+        self.app.nightmode.currentMode = mode
+        self.app.setStage(self.app.Stage.RESIZE)
 
-        
     @staticmethod
     def getSecOfDay(t : float = None):
         """ returns sec of the day"""
         if t == None:
             t = time.time()
 
-        secOfDay = t%(WHOLE_DAY)
+        secOfDay = int(t%(WHOLE_DAY))
         return secOfDay
     
     def createTTRow(self, ttStr : tuple[str, str]) -> tuple[int, MODE]:
@@ -56,21 +61,70 @@ class Nightmode:
             self.timeTable.insert(0,(0,lastMode))
         self.timeTable.sort(key=lambda x:x[0], reverse=True) # I need the table in reverse order for getMode
 
-    def getMode(self, t : float = None):
+    
+        
+    def detectTT(self, interval : range) -> bool:
+        """Checks if there is at least one record in TT in the interval."""
+        if interval.start == interval.stop:
+            return False #ignore
+        
+        def detectTTpart(pInterval : range) -> bool:
+            """here interval.start is always < interval.end"""
+            try:
+                next( tt for tt in self.timeTable if tt[0] in pInterval )
+                return True #found
+            except StopIteration:
+                return False #not found
+        
+        if interval.start < interval.stop:
+            return detectTTpart(interval)
+        else:
+            # handle midnight issue in two parts: interval.start -> midnight then 00:00:00 - interval.end
+            beforeMidnight = range(interval.start, 24*60*60)
+            if detectTTpart(beforeMidnight):
+                return True
+            afterMidnight = range(0, interval.stop)
+            return detectTTpart(afterMidnight)
+            
+    def checkTTModeChange(self):
+        """Checks if there was a Time Table mode change since the last call. If so clears forceMode flag."""
+        now = self.getSecOfDay()
+        changed = self.detectTT(range(self.lastCheckTT,now))
+        if changed:
+            mode = self.getModeFromTT()
+            self.setMode(mode)
+        self.lastCheckTT = now
+        
+
+    def getModeFromTT(self, t : float = None) -> MODE:
         """ returns mode according to time table"""
-        if self._forcedNightMode: return self.MODE.NIGHT #Night mode has been forced by remote controller
         secOfDay = self.getSecOfDay( t )
         mode = next( tt for tt in self.timeTable if tt[0]< secOfDay )[1]
         return mode
+    
+    def getMode(self, t : float = None) -> MODE:
+        """ returns current mode """
+        return self.currentMode if self.currentMode else self.MODE.DAY
             
     def getModeStr(self, mode : MODE = None) -> str:
         """returns mode string. For calling from other plugins"""
         if not mode:
-            mode = self.lastMode
-        return mode.name
-        
-                                  
-
-
-        
+            mode = self.currentMode
+        return mode.name if mode else 'DAY'
     
+
+    def on_bt_nightmode_pressed(self, widget):
+        """remote UI"""
+        mode = self.app.nightmode.MODE.DAY if self.app.nightmode.getMode() == self.app.nightmode.MODE.NIGHT else self.app.nightmode.MODE.NIGHT
+        self.setMode(mode)
+        text = 'Day Mode' if self.app.nightmode.getMode() == self.app.nightmode.MODE.NIGHT else 'Night Mode'
+        self.app.remote.update(self.bt_nightmode.set_text(text), text=text)
+
+
+    def setRemote(self):
+        self.bt_nightmode = gui.Button('Night Mode', width=200, height=30)
+        # setting the listener for the onclick event of the button
+        self.bt_nightmode.onclick.do(self.on_bt_nightmode_pressed)
+        self.tab_time = gui.Table()
+        self.tab_time.append_from_list(self.srcTable)
+        return [self.bt_nightmode,self.tab_time]

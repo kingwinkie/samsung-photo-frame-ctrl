@@ -11,6 +11,7 @@ class ArtsyAPI:
         self.token = self.get_token()
         self.nextURL = "https://api.artsy.net/api/artworks"
         self.artwork : dict = None
+        self.description : str = None #Current art description
         
     
 
@@ -84,6 +85,8 @@ class ImgLoaderArtsy(ImgLoader):
         Load (return) the image
         """
         imageb = self.imageb
+        self.description=f"{self.artwork['slug']} ({self.artwork['date']})"
+
         self.imageb = None
         return imageb
 

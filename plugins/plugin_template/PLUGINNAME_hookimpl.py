@@ -65,3 +65,15 @@ def brightnessChangeAfter(app, brightness : int) -> None:
     """called after brightness value was changed. Brightness is 0-255
     Intended as a feedback for remote
     """
+
+@plugins.hookimpl
+def ResizeBefore(app):
+    """Called before resize"""
+
+@plugins.hookimpl
+def ResizeAfter(app):
+    """Called after resize"""
+
+@plugins.hookimpl
+def setRemote(app):
+    """For setting web based remote from plugins. Returns list of remi.Widgets"""
