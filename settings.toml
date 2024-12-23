@@ -1,7 +1,7 @@
 
 
 [FRAME]
-LOGLEVEL = "DEBUG"
+LOGLEVEL = "INFO"
 IMG_SIZE = [
     1024,
     600,

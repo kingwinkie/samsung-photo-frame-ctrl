@@ -72,4 +72,7 @@ def ResizeAfter(app):
 @hookspec
 def setRemote(app):
     """For setting web based remote from plugins. Returns list of remi.Widgets"""
-    
+
+@hookspec
+def loadAfter(app):
+    """Called after successful load"""

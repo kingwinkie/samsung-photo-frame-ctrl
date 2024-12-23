@@ -76,5 +76,5 @@ def showImage(app) -> bool:
 @plugins.hookimpl
 def setRemote(app):
     """For setting web based remote from plugins. Returns list of remi.Widgets"""
-    return app.nightmode.setRemote()
+    return 'Night Mode', app.nightmode.setRemote()
     

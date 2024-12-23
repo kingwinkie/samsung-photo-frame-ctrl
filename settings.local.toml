@@ -8,7 +8,9 @@ ACTIVE = [
     "clocks",
     "loadimgartsy",
     "dummyframe",
-    "remote"
+    "remote",
+    "zoom"
+    
 ]
 
 [NIGHTMODE]

@@ -9,11 +9,13 @@ PLUGIN_NAME = "REMOTE"
 
 
 class Remote:
+    server : remi.Server = None
     serverApp : remote.RemoteWeb = None
     serverUrl : str # URL of the server
     initialRun : bool = True #for showing the QR code. 
     fileName : str #name of the last file
     def start(self, app):
+        """Starts the web app"""
         self.app = app
         address = app.cfg[PLUGIN_NAME].address
         port = int(app.cfg[PLUGIN_NAME].port)
@@ -22,27 +24,40 @@ class Remote:
             if addrList and len(addrList) > 0: 
                 address = addrList[0]
         self.serverUrl = f"http://{address}:{port}"
-        remote.startWeb(caller=self, address=address, port=port)
-    def createRemote(self) -> list[list[remi.Widget]]:
+        self.server = remote.startWeb(caller=self, address=address, port=port)
+
+    def createRemote(self) -> list[tuple[str,list[remi.Widget]]]:
+        """returns list of GUI items from plugins"""
         return self.app.createRemote()
     def on_init(self, serverApp : remote.RemoteWeb):
         """called from remote.RemoteWeb main after initialisation
         Place for setting initail values on the web
         """
         self.serverApp = serverApp
-        remote.delayTxtFB(self.app.delay)
-        remote.brightnessFB(self.app.brightness)
+        self.delayTxtFB(self.app.delay)
+        self.setBrightnessFB(self.app.brightness)
     
-    def update(self, func, **kwargs):
-        return self.serverApp.update(func, **kwargs)
-
+    def progress(self, value, limit):
+        val = value * 100 // limit
+        if self.serverApp:
+            self.serverApp.secureUpdate(self.serverApp.nextLoad.set_value(val), val=val)
 
     def on_brightness_changed(self, widget, value):
         self.app.setBrightness(int(value))
         self.app.setStage(self.app.Stage.RESIZE)
 
     def setBrightnessFB(self, brightness : int):
-            remote.brightnessFB(brightness)
+        if self.serverApp:
+            self.serverApp.secureUpdate(self.serverApp.slider_brightness.set_value( brightness ), brightness=brightness)
+
+    def delayTxtFB(self, delay : int):
+        if self.serverApp:
+            self.serverApp.secureUpdate(self.serverApp.delayTxt.set_text( str(delay)), delay=delay)
+    
+    def pauseSetText(self, text : str):
+        if self.serverApp:
+            self.serverApp.secureUpdate(self.serverApp.bt_pause.set_text(text), text=text)
+            
 
     def on_bt_load_pressed(self, widget):
         self.app.forceLoad = True
@@ -50,7 +65,7 @@ class Remote:
     def on_bt_pause_pressed(self, widget):
         self.app.paused = not self.app.paused
         text = "Continue" if self.app.paused else "Pause"
-        remote.pausedSetText(text)
+        self.pauseSetText(text)
 
     def on_delayTxt_changed(self, widget, value):
         self.app.delay = float(value)
@@ -69,13 +84,39 @@ class Remote:
         # Get the uploaded file
         uploaded_file = file_list[0]
         self.showFile(uploaded_file)
+    def shutdown(self):
+        self.server.stop()
+        
 
+    def getPluginsContainer(self) -> remi.gui.Container:
+        pl = self.app.pm.list_name_plugin()
+        if pl:
+            container = remi.gui.Container(width=320, style={'display': 'block', 'overflow': 'auto', 'text-align': 'center', 'border-color': 'gray', 'border-width': '2px', 'border-style': 'solid','margin': '4px', 'padding': '2px'})
+            label = remi.gui.Label("Plugins", height=12, margin='0px', style={'color':'white','background-color':'rgb(3, 88, 200)', 'font-size':'8px', 'margin-bottom':'10px'})
+            container.append(label)
+        for p in pl:
+            pname = p[0]
+            check = remi.gui.CheckBoxLabel(pname, True, width=200, height=30, margin='10px', style={'align-items': 'left'}, align='left')
+            check.onchange.do(self.on_check_change)
+            container.append(check)
+        return container
+
+    def on_check_change(self, widget, value):
+        if value:
+            self.app.pm.register(widget.text)
+        else:
+            self.app.pm.unregister(widget.text)
+        self.app.setStage(self.app.Stage.LOAD)
+
+        
 
 @plugins.hookimpl
 def exit(app) -> None:
     """called when application is about to quit
     Placeholder for plugin cleanup
     """
+    app.remote.shutdown()
+     
 
 @plugins.hookimpl 
 def imageLoader(app):
@@ -142,6 +183,7 @@ def do(app) -> None:
     """called every second when frame is waiting to next frame.
     Intended for showing real time etc.
     """
+    app.remote.progress(app.idleIter, int(app.delay))
 
 @plugins.hookimpl
 def showImage(app) -> bool:

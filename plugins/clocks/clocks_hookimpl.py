@@ -21,16 +21,22 @@ class Clocks:
         text : str = self.getTime()
         self.app.image = imgutils.drawText(text=text, size=size, fontSize=self.fontSize, textColor=self.textColor, align=(imgutils.HAlign.CENTER, imgutils.VAlign.CENTER), bgImage=self.app.image)
         self.shownTime = text
-
+    
+    # remote UI
     def setRemote(self):
-        
+        self.lblColor = gui.Label('Color:', style={'text-align':'Left'})
         self.remote_colorPicker = gui.ColorPicker(default_value=self.textColor)
+        self.lblSize = gui.Label(f'Size: {self.fontSize} px', style={'text-align':'Left'})
         self.remote_fontSize = gui.Slider(self.fontSize, 50, 500, 10, width=200, height=10, margin='1px')
             
         # setting the listener for the onclick event of the button
         self.remote_colorPicker.onchange.do(self.on_remote_colorPicker_changed)
         self.remote_fontSize.onchange.do(self.on_remote_fontSize_changed)
-        return [self.remote_colorPicker, self.remote_fontSize]
+        return [self.lblColor, self.remote_colorPicker, self.lblSize, self.remote_fontSize]
+    
+    def setSizeText(self):
+        if hasattr(self, "lblSize"):
+            self.lblSize.set_text(f'Size: {self.fontSize} px')
     
     def on_remote_colorPicker_changed(self, widget, value):
         self.textColor = value
@@ -39,6 +45,7 @@ class Clocks:
     def on_remote_fontSize_changed(self, widget, value):
         self.fontSize = int(value)
         self.app.setStage(self.app.Stage.RESIZE)
+        self.setSizeText()
 
 
 @plugins.hookimpl
@@ -78,4 +85,4 @@ def loadCfg(app) -> None:
 @plugins.hookimpl
 def setRemote(app):
     """For setting web based remote from plugins. Returns list of remi.Widgets"""
-    return app.clocksPlugin.setRemote()
+    return 'Clocks',app.clocksPlugin.setRemote()

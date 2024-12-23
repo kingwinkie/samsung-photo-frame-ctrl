@@ -122,9 +122,10 @@ class Nightmode:
 
 
     def setRemote(self):
-        self.bt_nightmode = gui.Button('Night Mode', width=200, height=30)
+        self.bt_nightmode = gui.Button('Night Mode', width=200, height=30,  margin='4px')
         # setting the listener for the onclick event of the button
         self.bt_nightmode.onclick.do(self.on_bt_nightmode_pressed)
-        self.tab_time = gui.Table()
-        self.tab_time.append_from_list(self.srcTable)
+        table = [("Time","Mode")]
+        table.extend(self.srcTable)
+        self.tab_time = gui.Table.new_from_list(table,width=300, height=100, margin='4px')
         return [self.bt_nightmode,self.tab_time]

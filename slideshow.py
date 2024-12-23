@@ -58,7 +58,8 @@ class SlideShow:
         """Calls do() in plugins"""
         wait = 1 # wait 1s
         while (self.idleIter < self.delay or self.paused) and self.stage == self.Stage.IDLE:
-            self.idleIter += wait
+            if not self.paused:
+                self.idleIter += wait
             start = time.time()
             self.pm.hook.do(app=self) #call plugins
             delta = time.time() - start #measure time lost in plugins
@@ -122,10 +123,13 @@ class SlideShow:
         self.idleIter = 0
         if not buffer:
             buffer = self.imgLoader.load()
-        self.loadedImage = imgutils.bytes2img(buffer)
-        self.loadedImage = imgutils.exifTranspose(self.loadedImage)
-        self.forceLoad = False #new image has been loaded or it failed
-        return True #must returns True if success because of plugins
+        if buffer:
+            self.loadedImage = imgutils.bytes2img(buffer)
+            if self.loadedImage:
+                self.loadedImage = imgutils.exifTranspose(self.loadedImage)
+                self.forceLoad = False #new image has been loaded or it failed
+                self.pm.hook.loadAfter(app=self)
+                return True #must returns True if success because of plugins
 
     def resize(self):
         """Resize to fit the frame"""
@@ -179,13 +183,7 @@ class SlideShow:
 
         self.pm.hook.loadCfg(app=self) #loads defaults
 
-        pl = self.pm.list_name_plugin()
-        print(pl)
-        for p in pl:
-            pname = p[0]
-            if hasattr( self.cfg , pname):
-                print(self.cfg[pname])
-
+        
         self.pm.hook.startup(app=self)
         self.delay = self.cfg.FRAME.DELAY
         if not self.setLoader(): return
