@@ -25,6 +25,7 @@ class DummyFrame:
     def runner(self):
         """Pygame event thread"""
         pygame.init() # must be started in the thread
+        
         self.display = pygame.display.set_mode(self.window_size)
         pygame.display.set_caption('Dummy frame')
         running = True

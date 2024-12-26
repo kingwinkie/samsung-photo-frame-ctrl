@@ -27,7 +27,7 @@ class SlideShow:
             
     image : Image = None # current image
     loadedImage : Image = None # image as it has been loaded
-    imgLoader = None # active loader 
+    imgLoaders : list = None # active loaders
     brightnessMask : int = (0,0,0,0) #Initial Brightness is 100% with no color modification.
     delay : float = 60.0 # Delay between photos in seconds
     imageInfo : dict = None #information about currently shown picture
@@ -51,7 +51,13 @@ class SlideShow:
     
     def createRemote(self) -> list[list[remi.Widget]]:
         """Called from remote (if exists). For setting remote UI in plugins"""
-        widgets = self.pm.hook.setRemote(app=self) #call plugins
+        hookImpls = self.pm.hook.setRemote.get_hookimpls()
+        widgets = []
+        for hookImpl in hookImpls:
+            widgets.append((hookImpl.plugin_name,
+                            self.pm.getFancyName(hookImpl.plugin, False),
+                             hookImpl.function(app=self))) #call plugins
+        
         return widgets
 
     def idle(self):
@@ -73,7 +79,9 @@ class SlideShow:
     def get_plugin_manager(self):
         self.pm = plugins.FramePluginManager("slideshow")
         self.pm.add_hookspecs(hookspecs)
-        self.pm.load_all_plugins(self.cfg.PLUGINS.ACTIVE)
+        #available = self.pm.listOfAvailablePlugins()
+        #self.pm.load_all_plugins(self.cfg.PLUGINS.ACTIVE)
+        self.pm.loadAllPluginsFromDir(active=self.cfg.PLUGINS.ACTIVE)
         
         
     def sendToFrame(self):
@@ -107,22 +115,20 @@ class SlideShow:
                 self.pm.hook.imageChangeAfter(app=self)
                 return True
     
+    def addLoader(self, loader):
+        if loader:
+            self.imgLoaders.append(loader)
+
     
-    def setLoader(self):
-        imgLoaders : list = self.pm.hook.imageLoader(app=self)
-        if imgLoaders:
-            self.imgLoader = imgLoaders[0]
-        else:
-            LOGGER.error(f"Missing Image Loader plugin. Imstall it with: pip install samsungframe/plugins/loadimgurl")
-        return self.imgLoader
-
-
     def load(self, buffer : bytes = None) -> bool:
         """loads a new image. Buffer is here to force a specific image from plugins"""
         self.remotelyUploaded = False #turn the flag off
         self.idleIter = 0
         if not buffer:
-            buffer = self.imgLoader.load()
+            buffers = self.pm.hook.load(app=self)
+            if buffers:
+                buffer = buffers[0]
+            
         if buffer:
             self.loadedImage = imgutils.bytes2img(buffer)
             if self.loadedImage:
@@ -143,20 +149,27 @@ class SlideShow:
 
     def setStage(self, stage : int ):
         """For calling from plugins. Sets correct image for the stage"""
-        if stage == self.Stage.RESIZE:
-            self.image = self.loadedImage
-        if stage == self.Stage.SHOW:
-            self.image = self.resizedImage
-        self.stage = self.Stage(stage)
+        if stage == None:
+            self.stage = None
+        else:    
+            if stage == self.Stage.RESIZE:
+                self.image = self.loadedImage
+            if stage == self.Stage.SHOW:
+                self.image = self.resizedImage
+            self.stage = self.Stage(stage)
+        
         with self.cond: 
             self.cond.notify_all() #inform idle sleep if the stage change request was started from a different thread
 
-        LOGGER.debug(f"New stage SET {self.stage.name}")
+        if self.stage:
+            LOGGER.debug(f"New stage SET {self.stage.name}")
 
     def stages(self):
         """stage manager. Route is: load -> resize -> show -> idle"""
         while not self.quit:
-            if self.stage == self.Stage.LOAD:
+            if self.stage == self.Stage.LOAD or self.stage == None:
+                if self.stage == None:
+                    self.stage = self.Stage.LOAD
                 self.load()
             elif self.stage == self.Stage.RESIZE:
                 self.resize()
@@ -165,7 +178,8 @@ class SlideShow:
                     time.sleep(10) #connection lost. Request was too fast etc.
             elif self.stage == self.Stage.IDLE:
                 self.idle()
-            self.setStage(self.stage.nextStage())
+            if self.stage != None:
+                self.setStage(self.stage.nextStage())
 
     def saveCfg(self, path):
         data = self.cfg.as_dict()
@@ -186,7 +200,6 @@ class SlideShow:
         
         self.pm.hook.startup(app=self)
         self.delay = self.cfg.FRAME.DELAY
-        if not self.setLoader(): return
         try:
             self.stages()
         except KeyboardInterrupt:

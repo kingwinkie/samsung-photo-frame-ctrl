@@ -1,7 +1,8 @@
 import plugins
-PLUGIN_NAME = "<PLUGINNAME>"
-
-
+PLUGIN_NAME = "<PLUGINNAME>" # set plugin name here. This must be the same as prefix of this file.
+PLUGIN_FANCY_NAME = "<PLUGIN_FANCY_NAME>" # set fancy name for remote controller here
+PLUGIN_CLASS = "<CLASS>" # Classes are: LOADER (force load after change), DISPLAY (at least one must stay active), REMOTE(can't be unloaded from web)
+PLUGIN_SORT_ORDER = "<SORT_ORDER>" #Order for remote controller dialogs. Ascending.
 @plugins.hookimpl
 def exit(app) -> None:
     """called when application is about to quit

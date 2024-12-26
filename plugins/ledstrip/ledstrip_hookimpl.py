@@ -6,7 +6,8 @@ import ledconfig as ledConfig
 from PIL import Image
 
 PLUGIN_NAME = "LEDSTRIP"
-
+PLUGIN_FANCY_NAME = "LED Strip"
+PLUGIN_SORT_ORDER = 400
 
 class LedStripPlugin:
     sender : Sender = None

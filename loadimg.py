@@ -1,8 +1,12 @@
 import pycurl, certifi
 import logging as LOGGER
 import io
+import time
 
 class ImgLoader:
+    lastDownloadAttempt : float = 0 # last attempt to download a file
+    downloadLimit : float = 10 # Min delay between downloads for not to ban us.
+    imageb : bytes = None # Image prepared as bytes or ByteIO to be loaded via load()
 
     def prepare(self):
         """
@@ -13,15 +17,22 @@ class ImgLoader:
         """
         Load (return) the image
         """
-        ...
+        if not self.imageb:
+            self.prepare() # force load when image is not available
+        imageb = self.imageb
+        self.imageb = None
+        return imageb
 
     def isReady(self):
         """
-        Tells caller if the image is ready. Intended use is for URL (slow) download.
+        Tells the caller if the image is ready. Intended use is for URL (slow) download.
         """
-        return False
+        return True if self.imageb else False
     
     def loadImgCURL(self, url):
+        """Download routine"""
+        if not url:
+            return None
         imgFile = io.BytesIO()
         try:
             c = pycurl.Curl()
@@ -42,3 +53,19 @@ class ImgLoader:
             LOGGER.error(f"Downloading Error: {e}")
             return None
         return imgFile
+    
+    def nextAttempt(self) -> float:
+        """Returns time to next download atempt"""
+        now = time.time()
+        delta = now - self.lastDownloadAttempt
+        return self.downloadLimit - delta
+    
+    def areWeSafe(self) -> bool:
+            """Returns if downloading through prepare() can be proceen"""
+            return self.nextAttempt() <=0
+    
+    def do(self):
+        """Called from plugin do(). For image preparation"""
+        if self.areWeSafe(): #time test from last download
+            if self.isReady() == False:
+                self.prepare()

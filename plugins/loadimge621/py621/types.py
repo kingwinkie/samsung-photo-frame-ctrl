@@ -1,8 +1,10 @@
 from datetime import datetime, timezone
+from enum import Enum
 
-e6ai = "https://e6ai.net/"
-e621 = "https://e621.net/"
-e926 = "https://e926.net/"
+class EAPI(Enum):
+    e6ai = "https://e6ai.net/"
+    e621 = "https://e621.net/"
+    e926 = "https://e926.net/"
 
 class File:
     pass

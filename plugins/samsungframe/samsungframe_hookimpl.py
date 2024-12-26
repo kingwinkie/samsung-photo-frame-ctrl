@@ -6,6 +6,9 @@ import slideshow
 from loadimg import ImgLoader
 from PIL import Image
 PLUGIN_NAME = "SAMSUNGFRAME"
+PLUGIN_FANCY_NAME = "Samsung Frame"
+PLUGIN_CLASS = "DISPLAY"
+PLUGIN_SORT_ORDER = 500
 
 def sendToFrame(img : Image, frameModel : str):
     ret : bool = False

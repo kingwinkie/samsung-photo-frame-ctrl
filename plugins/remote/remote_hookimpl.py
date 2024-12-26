@@ -4,9 +4,12 @@ import logging as LOGGER
 import qrcode
 import getips
 import remi
+import plugins
 from imgutils import drawText, HAlign, VAlign
 PLUGIN_NAME = "REMOTE"
-
+PLUGIN_FANCY_NAME = "Remote Controller"
+PLUGIN_CLASS = "REMOTE"
+PLUGIN_SORT_ORDER = 1000
 
 class Remote:
     server : remi.Server = None
@@ -86,27 +89,71 @@ class Remote:
         self.showFile(uploaded_file)
     def shutdown(self):
         self.server.stop()
-        
+    
+    def secureUpdate(self, func, **kwargs):
+        """Thread safe update. Called from plugins"""
+        self.serverApp.secureUpdate(func, **kwargs)
 
     def getPluginsContainer(self) -> remi.gui.Container:
-        pl = self.app.pm.list_name_plugin()
+        """Container with list of plugins and on/off checkboxes"""
+        container = None
+        pl = self.app.pm.getAvailablePlugins()
         if pl:
             container = remi.gui.Container(width=320, style={'display': 'block', 'overflow': 'auto', 'text-align': 'center', 'border-color': 'gray', 'border-width': '2px', 'border-style': 'solid','margin': '4px', 'padding': '2px'})
             label = remi.gui.Label("Plugins", height=12, margin='0px', style={'color':'white','background-color':'rgb(3, 88, 200)', 'font-size':'8px', 'margin-bottom':'10px'})
             container.append(label)
-        for p in pl:
-            pname = p[0]
-            check = remi.gui.CheckBoxLabel(pname, True, width=200, height=30, margin='10px', style={'align-items': 'left'}, align='left')
-            check.onchange.do(self.on_check_change)
-            container.append(check)
+            checks = []
+            for enabled, plugin in pl:
+                #enabled : bool = p[0]
+                #plugin = p[1]
+                pluginName : str = plugin.PLUGIN_NAME
+                friendlyName : str = self.app.pm.getFancyName(plugin)
+                if hasattr(plugin, "PLUGIN_SORT_ORDER"):
+                    sortOrder : int = plugin.PLUGIN_SORT_ORDER
+                else:
+                    sortOrder = 0
+                    
+                if hasattr(plugin, "PLUGIN_CLASS"):
+                    if plugin.PLUGIN_CLASS in ["REMOTE", "DISPLAY"]:
+                        continue #ignore REMOTE
+                check = remi.gui.CheckBoxLabel(friendlyName, enabled, width=300, height=20, margin='4px', style={'justify-content': 'left'})
+                check.pluginName = pluginName
+                check.sortOrder = sortOrder
+                check.onchange.do(self.on_check_change)
+                checks.append(check)
+            checks.sort(key= lambda c : c.sortOrder)
+            container.append(checks)    
         return container
 
     def on_check_change(self, widget, value):
-        if value:
-            self.app.pm.register(widget.text)
-        else:
-            self.app.pm.unregister(widget.text)
-        self.app.setStage(self.app.Stage.LOAD)
+        plugin = self.app.pm.getAvailablePlugin(widget.pluginName)
+        if plugin:
+            if value:
+                # Checked - Register plugin
+                self.app.pm.register(plugin)
+                #call startup
+                if hasattr(plugin, "loadCfg"):
+                    plugin.loadCfg(self.app)
+                if hasattr(plugin, "startup"):
+                    plugin.startup(self.app)
+                stage = self.app.Stage.LOAD
+                if hasattr(plugin, "setRemote"):
+                    self.serverApp.addPluginContainer(plugin.PLUGIN_NAME,
+                                self.app.pm.getFancyName(plugin, False),
+                                plugin.setRemote(app=self.app)) #call plugin
+                if hasattr(plugin, "PLUGIN_CLASS"):
+                    if plugin.PLUGIN_CLASS == "LOADER":
+                        stage = None
+                self.app.setStage(stage) #force reload
+                    
+            else:
+                # unchecked - clean and deregister the plugin
+                if hasattr(plugin, "exit"):
+                    plugin.exit(app=self.app)
+                self.app.pm.unregister(plugin)
+                self.app.setStage(self.app.Stage.LOAD)
+                self.serverApp.removePluginContainer(widget.pluginName)
+
 
         
 
@@ -117,18 +164,6 @@ def exit(app) -> None:
     """
     app.remote.shutdown()
      
-
-@plugins.hookimpl 
-def imageLoader(app):
-    """called when a new image is required
-    Returns ImgLoader desc. object.
-    """
-
-@plugins.hookimpl
-def imageChangeAfter(app) -> None:
-    """called after image was successfuly changed on the screen
-    Intended for effects etc. Image is in app.image
-    """
 
 @plugins.hookimpl
 def imageChangeBefore(app) -> None:
@@ -184,16 +219,6 @@ def do(app) -> None:
     Intended for showing real time etc.
     """
     app.remote.progress(app.idleIter, int(app.delay))
-
-@plugins.hookimpl
-def showImage(app) -> bool:
-    """called when a new image should be shown. Intended use is for display plugins. Returns success or failure.
-    """
-
-@plugins.hookimpl
-def imageChangeBeforeEffects(app):
-    """For post-effects aka NightMode. Called after imageChangeBefore and before showImage. Intended use is for global filters.
-    """
 
 @plugins.hookimpl
 def brightnessChangeAfter(app, brightness : int) -> None:

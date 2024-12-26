@@ -1,11 +1,10 @@
 import sys
-import os.path as osp
-import pluggy
+import os
 import inspect
 import pluggy
 import logging as LOGGER
 
-
+from types import ModuleType
 from plugins import hookspecs
 from pkgutil import extend_path
 __path__ = extend_path(__path__, __name__)
@@ -17,25 +16,26 @@ hookimpl = pluggy.HookimplMarker("slideshow")
 
 # -*- coding: utf-8 -*-
 
-def load_module(path):
+def load_module(path : str) ->ModuleType:
     """Load a Python module dynamically.
     """
     if not path : raise ValueError("Invalid Python module path ")
-    if not osp.isfile(path):
+    if not os.path.isfile(path):
         # add hookimpl.py
         if not path[-3:] == ".py":
             #try to add hookimpl.py
-            path = osp.join(path,path + "_hookimpl.py") #creates loadimgurl/loadimgurl_hookimpl.py
+            path = os.path.join(path,path + "_hookimpl.py") #creates loadimgurl/loadimgurl_hookimpl.py
     
-    if not osp.isfile(path):
+    if not os.path.isfile(path):
         # try to add absolute path
-        path = osp.join(osp.realpath(osp.dirname(__file__)), path)
+        path = os.path.join(os.path.realpath(os.path.dirname(__file__)), path)
 
-    if not osp.isfile(path):
-        raise ValueError( f"Invalid Python module path '{path}'")
+    if not os.path.isfile(path):
+        LOGGER.error( f"Invalid Python module path '{path}'")
+        return
 
-    dirname, filename = osp.split(path)
-    modname = osp.splitext(filename)[0]
+    dirname, filename = os.path.split(path)
+    modname = os.path.splitext(filename)[0]
 
     if dirname not in sys.path:
         sys.path.append(dirname)
@@ -62,33 +62,11 @@ def create_plugin_manager():
 
 
 class FramePluginManager(pluggy.PluginManager):
+    pluginsAvailable : list[tuple[bool,str, ModuleType]] = []
 
-    def __init__(self, *args, **kwargs):
-        super(FramePluginManager, self).__init__(*args, **kwargs)
-        self._plugin2calls = {}
 
-        def before(hook_name, methods, kwargs):
-            """Keep the list of already called hook per plugin to know if a
-            plugin has already been initialized in case of hot-registration.
-            """
-            for hookimpl in methods:
-                self._plugin2calls[hookimpl.plugin].add(hook_name)
 
-        def after(outcome, hook_name, methods, kwargs):
-            pass
-
-        self.add_hookcall_monitoring(before, after)
-
-    def register(self, plugin, name=None):
-        """Override to keep all plugins that have already been registered
-        at least one time.
-        """
-        plugin_name = super(FramePluginManager, self).register(plugin, name)
-        if plugin not in self._plugin2calls:
-            self._plugin2calls[plugin] = set()
-        return plugin_name
-
-    def load_all_plugins(self, paths, disabled=None):
+    def load_all_plugins(self, paths : str, active : list[str]=None):
         """Register the core plugins, load plugins from setuptools entry points
         and the load given module/package paths.
 
@@ -110,18 +88,44 @@ class FramePluginManager(pluggy.PluginManager):
                 LOGGER.debug("Plugin found at '%s'", path)
                 plugins.append(plugin)
 
-       
         for plugin in plugins:
-            self.register(plugin, name=getattr(plugin, 'PLUGIN_NAME', None))
+            name = getattr(plugin, 'PLUGIN_NAME', None)
+            self.register(plugin, name=name) #plugin must be registered for getting its friendly name
+            if active and name in active:
+                pluginIsActive = True
+            else:
+                pluginIsActive = False
+                self.unregister(plugin)
+            self.pluginsAvailable.append((pluginIsActive, plugin))
 
         # Check that each hookimpl is defined in the hookspec
         # except for hookimpl with kwarg 'optionalhook=True'.
         self.check_pending()
 
-        # Disable unwanted plugins
-        if disabled:
-            for name in disabled:
-                self.unregister(name=name)
+
+    def getAvailablePlugins(self) -> list[tuple]:
+        """returns list of available plugins. For remote controller etc"""
+        return self.pluginsAvailable
+
+    def getAvailablePlugin(self, name : str) -> tuple:
+        """returns available plugin regardles its registration."""
+        try:
+            plugin = next(p for p in self.pluginsAvailable if p[1].PLUGIN_NAME == name)
+            return plugin[1]
+        except StopIteration:
+            return None
+        
+
+
+    def loadAllPluginsFromDir(self,  active : str , path : str = None):
+        """Loads all plugins from the path. If path is not set then from this file directory"""
+        path = os.path.realpath(os.path.dirname(__file__))
+        dirs = os.listdir(path)
+        dirs = filter(lambda x: os.path.isdir(os.path.join(path,x)) and x != 'plugin_template' and x[:2] != '__',dirs)
+        dirs=list(dirs)
+        self.load_all_plugins(dirs, active)
+
+
 
     def list_external_plugins(self):
         """Return the list of loaded plugins except ``pibooth`` core plugins.
@@ -139,7 +143,7 @@ class FramePluginManager(pluggy.PluginManager):
                     values.append(plugin)
         return values
 
-    def get_friendly_name(self, plugin, version=True):
+    def getFancyName(self, plugin, version=True):
         """Return the friendly name of the given plugin and
         optionally its version.
 
@@ -148,6 +152,11 @@ class FramePluginManager(pluggy.PluginManager):
         :param version: include the version number
         :type version: bool
         """
+        if hasattr(plugin, "PLUGIN_FANCY_NAME"):
+            name = plugin.PLUGIN_FANCY_NAME
+            if name:
+                return name
+            
         # List of all setuptools registered plugins
         distinfo = dict(self.list_plugin_distinfo())
 
@@ -164,10 +173,6 @@ class FramePluginManager(pluggy.PluginManager):
             name = "{}-{}".format(name, vnumber)
         else:
             name = "{}".format(name)
-
-        # Questionable convenience, but it keeps things short
-        if name.startswith("pibooth-") or name.startswith("pibooth_"):
-            name = name[8:]
 
         return name
 

@@ -7,6 +7,8 @@ import time
 import remi.gui as gui
 
 PLUGIN_NAME = "CLOCKS"
+PLUGIN_FANCY_NAME = "Clocks"
+PLUGIN_SORT_ORDER = 300
 class Clocks:
     currentImage : Image
     app : SlideShow
@@ -47,12 +49,12 @@ class Clocks:
         self.app.setStage(self.app.Stage.RESIZE)
         self.setSizeText()
 
+clocks = Clocks()
 
 @plugins.hookimpl
 def startup(app):
-    clocks = Clocks()
+    global clocks
     clocks.app = app
-    app.clocksPlugin = clocks
 
 @plugins.hookimpl
 def exit(app):
@@ -60,12 +62,11 @@ def exit(app):
 
 @plugins.hookimpl
 def imageChangeBefore(app : SlideShow) -> None:
-    app.clocksPlugin.currentImage=app.image
-    app.clocksPlugin.showTime()
+    clocks.currentImage=app.image
+    clocks.showTime()
 
 @plugins.hookimpl
 def do(app : SlideShow) -> None:
-    clocks : Clocks = app.clocksPlugin
     now = clocks.getTime()
     if now != clocks.shownTime:
         app.setStage(app.Stage.RESIZE)
@@ -85,4 +86,4 @@ def loadCfg(app) -> None:
 @plugins.hookimpl
 def setRemote(app):
     """For setting web based remote from plugins. Returns list of remi.Widgets"""
-    return 'Clocks',app.clocksPlugin.setRemote()
+    return clocks.setRemote()

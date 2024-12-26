@@ -1,9 +1,11 @@
 import plugins
-from loadimg import ImgLoader
 from imgaloader import ImgLoaderArtsy
 from imgutils import drawText, HAlign, VAlign
 
 PLUGIN_NAME = "LOADIMGARTSY"
+PLUGIN_FANCY_NAME = "Artsy.net Gallery"
+PLUGIN_CLASS = "LOADER"
+PLUGIN_SORT_ORDER = 200
 
 @plugins.hookimpl
 def imageChangeBefore(app):
@@ -13,18 +15,15 @@ def imageChangeBefore(app):
 
 @plugins.hookimpl
 def startup(app):
-    return None
+    artsyImgLoader = ImgLoaderArtsy(app.cfg[PLUGIN_NAME].CLIENT_ID,app.cfg[PLUGIN_NAME].CLIENT_SECRET,app.cfg.FRAME.IMG_SIZE)
+    artsyImgLoader.downloadLimit = app.cfg[PLUGIN_NAME].HTTP_DOWNLOAD_LIMIT
+    app.artsyImgLoader = artsyImgLoader
+    return artsyImgLoader
 
 @plugins.hookimpl
 def exit(app):
     return None
 
-@plugins.hookimpl
-def imageLoader(app) -> ImgLoader:
-    artsyImgLoader = ImgLoaderArtsy(app.cfg[PLUGIN_NAME].CLIENT_ID,app.cfg[PLUGIN_NAME].CLIENT_SECRET,app.cfg.FRAME.IMG_SIZE)
-    artsyImgLoader.downloadLimit = app.cfg[PLUGIN_NAME].HTTP_DOWNLOAD_LIMIT
-    app.artsyImgLoader = artsyImgLoader
-    return artsyImgLoader
 
 @plugins.hookimpl
 def loadCfg(app) -> None:
@@ -41,8 +40,10 @@ def loadCfg(app) -> None:
 
 @plugins.hookimpl
 def do(app):
-    artsyImgLoader : ImgLoaderArtsy = app.artsyImgLoader
-    if artsyImgLoader.areWeSafe(): #time test from last download
-        if not artsyImgLoader.isReady():
-            artsyImgLoader.prepare()
+    app.artsyImgLoader.do()
+    
         
+@plugins.hookimpl
+def load(app) -> bytes:
+    """Get image data. For loaders."""
+    return app.artsyImgLoader.load()

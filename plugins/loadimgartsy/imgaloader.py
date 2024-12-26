@@ -50,16 +50,10 @@ class RandomImageDownloader:
 
 class ImgLoaderArtsy(ImgLoader):
     downloader : RandomImageDownloader
-    imageb : bytes
-    downloadLimit : int #min delay between downloads
-    lastDownloadAttempt : int #timestamp of the latest download attempt
-
+    
     def __init__(self, client_id : str, client_secret : str, size : tuple[int,int]):
         artsyAPI = ArtsyAPI(client_id=client_id, client_secret=client_secret)
         self.downloader = RandomImageDownloader(artsyAPI, size)
-        self.imageb = None
-        self.downloadLimit = 10
-        self.lastDownloadAttempt = 0
         self.size = size
         self.prepare()
 
@@ -84,22 +78,14 @@ class ImgLoaderArtsy(ImgLoader):
         """
         Load (return) the image
         """
+        if not self.imageb:
+            self.prepare() # force load when image is not available
+        
         imageb = self.imageb
         self.description=f"{self.artwork['slug']} ({self.artwork['date']})"
 
         self.imageb = None
         return imageb
 
-    def isReady(self):
-        """
-        Tells caller if the image is ready. Intended use is for URL (slow) download.
-        """
-        return True if self.imageb else False
+
     
-    def nextAttempt(self) -> float:
-        now = time.time()
-        delta = now - self.lastDownloadAttempt
-        return self.downloadLimit - delta
-    
-    def areWeSafe(self) -> bool:
-            return self.nextAttempt() <=0

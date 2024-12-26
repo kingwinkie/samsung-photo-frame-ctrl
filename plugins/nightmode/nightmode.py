@@ -9,21 +9,13 @@ class Nightmode:
     nightBrightness : int # Nightmode brightness from settings
     currentMode : MODE = None # current mode. May be set through TT or from remote
     lastCheckTT : int = 0 # day timestamp (s) of the last check
-    @property
-    def forcedMode(self):
-        return self._forcedMode
     
-    @forcedMode.setter
-    def forcedMode(self, mode : MODE):
-        self._forcedMode = mode
-        self.setMode(mode)
-
-    def setMode(self, mode : MODE):    
+    def setMode(self, mode : MODE):
+        self.currentMode = mode
         if mode == Nightmode.MODE.NIGHT:
             self.app.setBrightness(brightness=self.nightBrightness, color=(10,0,0))
         else:
             self.app.setBrightness(brightness=255, color=(0,0,0))
-        self.app.nightmode.currentMode = mode
         self.app.setStage(self.app.Stage.RESIZE)
 
     @staticmethod
@@ -115,10 +107,10 @@ class Nightmode:
 
     def on_bt_nightmode_pressed(self, widget):
         """remote UI"""
-        mode = self.app.nightmode.MODE.DAY if self.app.nightmode.getMode() == self.app.nightmode.MODE.NIGHT else self.app.nightmode.MODE.NIGHT
+        mode = self.MODE.DAY if self.getMode() == self.MODE.NIGHT else self.MODE.NIGHT
         self.setMode(mode)
-        text = 'Day Mode' if self.app.nightmode.getMode() == self.app.nightmode.MODE.NIGHT else 'Night Mode'
-        self.app.remote.update(self.bt_nightmode.set_text(text), text=text)
+        text = 'Day Mode' if self.getMode() == self.MODE.NIGHT else 'Night Mode'
+        self.app.remote.secureUpdate(self.bt_nightmode.set_text(text), text=text)
 
 
     def setRemote(self):

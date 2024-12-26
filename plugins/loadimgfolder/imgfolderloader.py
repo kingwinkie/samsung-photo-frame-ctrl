@@ -48,7 +48,9 @@ class LoaderFile(): # takes random file from a folder
         
     def loadFile(self, imgPath) :
         if imgPath:
-          picture
+            ...
+            # not done yet
+            #picture
     
 class ImgLoaderFolder(ImgLoaderRandom): # takes random file from a folder
     

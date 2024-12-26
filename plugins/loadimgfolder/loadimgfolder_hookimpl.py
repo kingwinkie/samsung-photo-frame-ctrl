@@ -5,7 +5,9 @@ from loadimg import ImgLoader
 
 
 PLUGIN_NAME = "LOADIMGFOLDER"
-
+PLUGIN_FANCY_NAME = "Local Folder"
+PLUGIN_CLASS = "LOADER"
+PLUGIN_SORT_ORDER = 220
 @plugins.hookimpl
 def showImage(app : slideshow.SlideShow) -> bool:
      """called when a new image should be shown. Intended use is for display plugins. Returns success or failure.
@@ -30,11 +32,6 @@ def exit(app : slideshow.SlideShow) -> None:
     Placeholder for plugin cleanup
     """
 
-@plugins.hookimpl
-def imageLoader(app) -> ImgLoader:
-    imgLoader = ImgLoaderFolder(app.cfg[PLUGIN_NAME].IMG_SOURCE_PATH, imgExt=app.cfg[PLUGIN_NAME].IMG_EXT)
-    return imgLoader
-
 
 @plugins.hookimpl
 def loadCfg(app) -> None:
@@ -47,3 +44,9 @@ def loadCfg(app) -> None:
         "IMG_EXT" : "jpg", # folder filtering extension
     }
     app.loadCfg(PLUGIN_NAME, defaultConfig)
+
+
+@plugins.hookimpl
+def load(app) -> bytes:
+    """Get image data. For loaders."""
+    return app.imgLoaderFolder.load()

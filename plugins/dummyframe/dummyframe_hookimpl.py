@@ -2,6 +2,9 @@ import plugins
 import slideshow
 import dummyframe
 PLUGIN_NAME = "DUMMYFRAME"
+PLUGIN_FANCY_NAME = "Dummy Frame"
+PLUGIN_CLASS = "DISPLAY"
+PLUGIN_SORT_ORDER = 500
 @plugins.hookimpl
 def imageChangeAfter(app : slideshow.SlideShow) -> None:
     """called after image was successfuly changed on the screen
@@ -20,6 +23,7 @@ def exit(app : slideshow.SlideShow) -> None:
     """called when application is about to quit
     Placeholder for plugin cleanup
     """
+    #dummyframe.pygame.quit()
     del app.dummyScreen
 
 

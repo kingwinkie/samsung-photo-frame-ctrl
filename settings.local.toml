@@ -4,13 +4,12 @@ MODEL = ""
 
 [PLUGINS]
 ACTIVE = [
-    "nightmode",
-    "clocks",
-    "loadimgartsy",
-    "dummyframe",
-    "remote",
-    "zoom"
-    
+    "NIGHTMODE",
+    "CLOCKS",
+    "LOADIMGARTSY",
+    "DUMMYFRAME",
+    "REMOTE",
+    "ZOOM"
 ]
 
 [NIGHTMODE]

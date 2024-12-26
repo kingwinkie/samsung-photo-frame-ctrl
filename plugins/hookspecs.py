@@ -9,7 +9,7 @@ def exit(app) -> None:
     Placeholder for plugin cleanup
     """
 
-@hookspec 
+@hookspec() 
 def imageLoader(app):
     """called when a new image is required
     Returns ImgLoader desc. object.
@@ -76,3 +76,9 @@ def setRemote(app):
 @hookspec
 def loadAfter(app):
     """Called after successful load"""
+
+@hookspec
+def load(app) -> bytes:
+    """Get image data. For loaders."""
+
+    

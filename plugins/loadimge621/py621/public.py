@@ -1,5 +1,6 @@
 import requests
 from py621 import types
+import logging as LOGGER
 
 # Custom user agent header for identification within e621
 headers = {"User-Agent":"py621/1.2.0 (by Bugman69 on e621)"}
@@ -206,11 +207,13 @@ class api:
                 RequestLink += "+"
     
         # Sends the actual request
-        if self.authenticate == True:
-            eRequest = requests.get(RequestLink, headers=headers, auth=self.auth)
-        else:
-            eRequest = requests.get(RequestLink, headers=headers)
-
+        try:
+            if self.authenticate == True:
+                eRequest = requests.get(RequestLink, headers=headers, auth=self.auth)
+            else:
+                eRequest = requests.get(RequestLink, headers=headers)
+        except requests.exceptions.ConnectionError as e:
+            LOGGER.error(f"Connection Error {e}")
         # Verify status codes
         handleCodes(eRequest.status_code)
 

@@ -9,19 +9,10 @@ IMG_SIZE = [
 DELAY = 60
 
 [PLUGUNS]
-AVAILABLE = [
-    "ledstrip",
-    "loadimgfolder",
-    "loadimgurl",
-    "loadimgartsy",
-    "clocks",
-    "samsungframe",
-    "dummyframe"
-]
 
 ACTIVE = [
-    "loadimgurl",
-    "samsungframe",
+    "LOADIMGURL",
+    "SAMSUNGFRAME",
 ]
 
 [SAMSUNGFRAME]

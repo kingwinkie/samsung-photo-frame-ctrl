@@ -1,21 +1,21 @@
 import io
 import logging as LOGGER
-import loadimg
-import pycurl
-import certifi
+from loadimg import ImgLoader
 import time
 import py621,py621.types
 import random
 
-class ImgLoaderE621(loadimg.ImgLoader):
+class ImgLoaderE621(ImgLoader):
     pages : int = 700
     api : str = "e621"
     tags : list = ["status:active"]
     downloadLimit : float = 10
+    imageb : bytes # already loaded image
     url : str = None #URL to be shown
     def __init__(self):
         super().__init__()
         self.lastDownloadAttempt = 0
+        self.prepare()
         
 
     def download(self, url : str) -> io.BytesIO:
@@ -26,7 +26,7 @@ class ImgLoaderE621(loadimg.ImgLoader):
 
     def getURL(self) -> str:
         # Create an unsafe api instance
-        api_type = getattr(py621.types,self.api)
+        api_type = py621.types.EAPI[self.api].value
         api = py621.public.api(api_type)
         page : int = random.randint(0, self.pages)
         #choose a random post
@@ -64,11 +64,13 @@ class ImgLoaderE621(loadimg.ImgLoader):
             time.sleep(wait)
         self.lastDownloadAttempt = time.time()
 
-    def load(self):
+    def prepare(self):
+        self.imageb = None
         if not self.url:
             #force download
             self.url = self.getURL()
         if self.url:
-            image = self.download(self.url)
-            return image
-    
+            self.imageb = self.download(self.url)
+        
+
+   
