@@ -80,7 +80,7 @@ def exifTranspose(img : Image.Image) -> Image.Image:
 def resize_and_center(file,targetSize : tuple[int,int],**kwargs) -> Image.Image:
     """file is filename or bytes or readbuffer (Python 3.9 on Pi can't process '|')"""
     img : Image.Image = bytes2img(file)
-    return resize_and_centerImg(img,targetSize=targetSize, **kwargs)
+    return resize_and_centerImg(img,frameSize=targetSize, **kwargs)
 
 def calcAlign(align : tuple[HAlign, VAlign], size : tuple[int,int], textSize : tuple[int,int], offset : tuple[int,int]= (0,0)) -> tuple[int,int]:
         horizontal = 0
