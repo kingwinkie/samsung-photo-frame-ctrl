@@ -11,9 +11,11 @@ from os import path as osp
 from dynaconf import Dynaconf
 from PIL import Image, ImageColor
 
+myPath = osp.realpath(osp.dirname(__file__))
 settings = Dynaconf(
     envvar_prefix="FRAME",
-    settings_files=[osp.join(osp.realpath(osp.dirname(__file__)),'default.json'), 'settings.toml', '.secrets.toml', ],
+
+    settings_files=[osp.join(myPath,'settings.toml'), osp.join(myPath,'.secrets.toml') ]
 )
 def main():
    parser = argparse.ArgumentParser(
