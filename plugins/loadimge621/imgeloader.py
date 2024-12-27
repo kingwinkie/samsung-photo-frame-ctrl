@@ -15,7 +15,7 @@ class ImgLoaderE621(ImgLoader):
     def __init__(self):
         super().__init__()
         self.lastDownloadAttempt = 0
-        self.prepare()
+        
         
 
     def download(self, url : str) -> io.BytesIO:

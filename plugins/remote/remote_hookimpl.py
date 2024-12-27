@@ -107,7 +107,7 @@ class Remote:
                 #enabled : bool = p[0]
                 #plugin = p[1]
                 pluginName : str = plugin.PLUGIN_NAME
-                friendlyName : str = self.app.pm.getFancyName(plugin)
+                friendlyName : str = self.app.pm.getFancyName(plugin, False)
                 if hasattr(plugin, "PLUGIN_SORT_ORDER"):
                     sortOrder : int = plugin.PLUGIN_SORT_ORDER
                 else:
@@ -129,9 +129,7 @@ class Remote:
         plugin = self.app.pm.getAvailablePlugin(widget.pluginName)
         if plugin:
             if value:
-                # Checked - Register plugin
-                self.app.pm.register(plugin)
-                #call startup
+                # call startup
                 if hasattr(plugin, "loadCfg"):
                     plugin.loadCfg(self.app)
                 if hasattr(plugin, "startup"):

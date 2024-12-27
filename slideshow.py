@@ -27,7 +27,6 @@ class SlideShow:
             
     image : Image = None # current image
     loadedImage : Image = None # image as it has been loaded
-    imgLoaders : list = None # active loaders
     brightnessMask : int = (0,0,0,0) #Initial Brightness is 100% with no color modification.
     delay : float = 60.0 # Delay between photos in seconds
     imageInfo : dict = None #information about currently shown picture
@@ -39,7 +38,7 @@ class SlideShow:
     idleIter : int = 0 # Idle iterator. Set in Show() because plugins may change it
     stage : Stage = Stage.LOAD # Current stage. Stages are : 0 = load, 1 = resize, 2 = show, 3 = idle
     remotelyUploaded : bool = False # The picture has been uploaded remotely via RC. Info for plugins
-    cond : threading.Condition #notify for idle sleep 
+    cond : threading.Condition #notifycation for idle sleep 
     @property
     def brightness(self):
         return 255-self.brightnessMask[3]
@@ -94,7 +93,6 @@ class SlideShow:
         if ret and any(ret): 
             return True
     
-    
     def setBrightness(self, brightness : int , color : tuple[int,int,int] = None):
         brMask : int = 255 - brightness
         if not color:
@@ -108,18 +106,7 @@ class SlideShow:
             self.image = imgutils.pasteImage(bgImage=self.image, fgImage=image)
         self.pm.hook.brightnessChangeAfter(app=self, brightness=brightness)
 
-    def show(self):
-            self.pm.hook.imageChangeBefore(app=self)
-            self.setBrightness(self.brightness)
-            if self.sendToFrame():
-                self.pm.hook.imageChangeAfter(app=self)
-                return True
-    
-    def addLoader(self, loader):
-        if loader:
-            self.imgLoaders.append(loader)
-
-    
+        
     def load(self, buffer : bytes = None) -> bool:
         """loads a new image. Buffer is here to force a specific image from plugins"""
         self.remotelyUploaded = False #turn the flag off
@@ -132,20 +119,30 @@ class SlideShow:
         if buffer:
             self.loadedImage = imgutils.bytes2img(buffer)
             if self.loadedImage:
-                self.loadedImage = imgutils.exifTranspose(self.loadedImage)
+                self.loadedImage = imgutils.exifTranspose(self.loadedImage) #rotate the image
                 self.forceLoad = False #new image has been loaded or it failed
                 self.pm.hook.loadAfter(app=self)
                 return True #must returns True if success because of plugins
 
     def resize(self):
         """Resize to fit the frame"""
-        ret = self.pm.hook.ResizeBefore(app=self)
-        if ret and any(ret): #at least one ResizeBefore returned True
-            self.resizedImage = self.image
-        else:
-            self.resizedImage = imgutils.resize_and_centerImg(self.image, self.cfg.FRAME.IMG_SIZE)
-        self.image = self.resizedImage
-        self.pm.hook.ResizeAfter(app=self)
+        if self.image:
+            ret = self.pm.hook.ResizeBefore(app=self)
+            if ret and any(ret): #at least one ResizeBefore returned True
+                self.resizedImage = self.image
+            else:
+                self.resizedImage = imgutils.resize_and_centerImg(self.image, self.cfg.FRAME.IMG_SIZE)
+            self.image = self.resizedImage
+            self.pm.hook.ResizeAfter(app=self)
+
+    def show(self):
+        if self.image:
+            self.pm.hook.imageChangeBefore(app=self)
+            self.setBrightness(self.brightness)
+            if self.sendToFrame():
+                self.pm.hook.imageChangeAfter(app=self)
+                return True
+    
 
     def setStage(self, stage : int ):
         """For calling from plugins. Sets correct image for the stage"""
@@ -170,7 +167,11 @@ class SlideShow:
             if self.stage == self.Stage.LOAD or self.stage == None:
                 if self.stage == None:
                     self.stage = self.Stage.LOAD
-                self.load()
+                if not self.load():
+                    LOGGER.error("Image wasn't loaded")
+                    time.sleep(10) #connection lost. Request was too fast etc.
+                    self.stage = None #try again
+
             elif self.stage == self.Stage.RESIZE:
                 self.resize()
             elif self.stage == self.Stage.SHOW:

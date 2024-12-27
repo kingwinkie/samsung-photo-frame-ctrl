@@ -42,7 +42,7 @@ def startup(app):
     pluginImgLoaderE.api = app.cfg[PLUGIN_NAME].API
     pluginImgLoaderE.tags = app.cfg[PLUGIN_NAME].TAGS
     pluginImgLoaderE.downloadLimit = app.cfg[PLUGIN_NAME].HTTP_DOWNLOAD_LIMIT
-    pluginImgLoaderE.url = pluginImgLoaderE.getURL() #download first URL
+    pluginImgLoaderE.prepare()
     return None
 
 @plugins.hookimpl
