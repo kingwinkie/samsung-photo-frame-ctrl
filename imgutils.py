@@ -2,6 +2,8 @@ from PIL import Image, UnidentifiedImageError, ImageDraw, ImageFont, ImageOps
 import io
 from enum import Enum,IntEnum
 import logging as LOGGER
+import os.path as osp
+import glob
 
 VAlign = Enum("VAlign",["TOP","CENTER","BOTTOM"])
 HAlign = Enum("HAlign",["LEFT","CENTER","RIGHT"])
@@ -132,3 +134,34 @@ def drawText(text : str, size : tuple[int,int], fontSize : int, textColor, align
         draw.text(xy=textPos,text=text,fill=textColor, font=font)
         return pasteImage(bgImage, image)
         
+def getAvailableFonts(fontPath : str = None) -> list[str]:
+    """Returns list of fontPaths found in fontPath or in ./font """
+    fontPaths : list[str] = []
+    realPath = osp.join(osp.realpath(osp.dirname(__file__)))
+    search = osp.join(osp.join(realPath, "font"),"*.ttf")
+    fontPaths = glob.glob(search)
+    if fontPath:
+        search = osp.join(fontPath,"*.ttf")
+        fontPaths.extend(glob.glob(search))
+    return fontPaths
+
+def getFontDesc(fontPath : str) -> tuple[str, str]:
+    """Returns font name, font path"""
+    font = ImageFont.truetype(fontPath)
+    fontName, _ = font.getname()
+    return fontName, font.path
+
+def getAvailableFontsDesc(fontPath : str = None) -> list[tuple[str, str]]:
+    """Fontdesc of all found fonts"""
+    fontPaths = getAvailableFonts(fontPath)
+    fontDescs = map(getFontDesc, fontPaths)
+    return fontDescs
+
+def getFontDescByName(fontName : str,fontPath : str = None) -> tuple[str, str]:
+    fontDescs = getAvailableFontsDesc(fontPath)
+    fontDesc = None
+    try:
+        fontDesc = next( f for f in fontDescs if f[0] == fontName)
+    except StopIteration:
+        pass
+    return fontDesc
