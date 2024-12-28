@@ -158,6 +158,7 @@ def getAvailableFontsDesc(fontPath : str = None) -> list[tuple[str, str]]:
     return fontDescs
 
 def getFontDescByName(fontName : str,fontPath : str = None) -> tuple[str, str]:
+    if not fontName: return None
     fontDescs = getAvailableFontsDesc(fontPath)
     fontDesc = None
     try:

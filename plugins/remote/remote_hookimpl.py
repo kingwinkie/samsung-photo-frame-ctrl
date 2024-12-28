@@ -129,6 +129,7 @@ class Remote:
         plugin = self.app.pm.getAvailablePlugin(widget.pluginName)
         if plugin:
             if value:
+                self.app.pm.register(plugin)
                 # call startup
                 if hasattr(plugin, "loadCfg"):
                     plugin.loadCfg(self.app)
