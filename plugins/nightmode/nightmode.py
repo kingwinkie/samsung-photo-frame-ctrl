@@ -127,8 +127,8 @@ class Nightmode:
 
     def addRemoteTable(self):
         tabContainer = gui.VBox(width=310, style={'display': 'table', 'overflow': 'auto', 'text-align': 'center','margin': '4px'})            
-        titleContainer = gui.HBox(style={'display': 'table-row'})            
-        laTime = gui.Label("Time", width=148, height=28, margin='0px', style={'display': 'table-cell', 'background':'rgba(19, 108, 209, .6)','color': 'rgb(255, 255, 255)','border': '1px','border-style': 'solid'})
+        titleContainer = gui.HBox(style={'display': 'table-row'})          
+        laTime = gui.Label("Time", width=148, height=28, margin='0px', style={'align-content:': 'center', 'display': 'table-cell', 'background':'rgba(19, 108, 209, .6)','color': 'rgb(255, 255, 255)','border': '1px','border-style': 'solid'})
         laMode = gui.Label("Mode", width=128, height=28, margin='0px', style={'display': 'table-cell', 'background':'rgba(19, 108, 209, .6)','color': 'rgb(255, 255, 255)','border': '1px','border-style': 'solid'})
         laX = gui.Label("X", width=18, height=28, margin='0px',style={'display': 'table-cell', 'background':'rgba(19, 108, 209, .6)','color': 'rgb(255, 255, 255)','border': '1px','border-style': 'solid'})
         titleContainer.append([laTime, laMode, laX])
@@ -140,17 +140,17 @@ class Nightmode:
         
     def addRemoteRow(self, srcTime : str, mode : MODE):
         rowContainer = gui.HBox(style={'display': 'table-row'})            
-        tiTime = gui.TextInput(width=140, height=20, margin='4px', style={'display': 'table-cell'})
+        tiTime = gui.TextInput(width=148, height=20, margin='1px', style={'display': 'table-cell'})
         tiTime.set_value(srcTime)
         tiTime.onchange.do(self.onChangeRemoteTab)
         tiTime.valType = "time"
         #tiTime.onchange.do(self.on_tiTime_change)
         modes = [m.name for m in self.MODE]
-        ddMode = gui.DropDown.new_from_list(modes,width=120, height=20, margin='4px',style={'display': 'table-cell'})
+        ddMode = gui.DropDown.new_from_list(modes,width=128, height=20, margin='1px',style={'display': 'table-cell'})
         ddMode.set_value(mode.name)
         ddMode.valType = "mode"
         ddMode.onchange.do(self.onChangeRemoteTab)
-        btX = gui.Button(text = "X", width=10, height=20, margin='4px', style={'display': 'table-cell'})
+        btX = gui.Button(text = "X", width=18, height=20, margin='1px', style={'display': 'table-cell'})
         btX.onclick.do(self.onBtXClicked)
         rowContainer.append([tiTime,ddMode, btX])
         btX.rowContainer = rowContainer
