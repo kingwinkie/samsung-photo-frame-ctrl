@@ -20,6 +20,7 @@ def startup(app) -> None:
     nightmode.srcTable = app.cfg[PLUGIN_NAME].TIMES
     nightmode.createTT(nightmode.srcTable)
     nightmode.app = app
+    app.nightmode = nightmode # must stay here for communication with ledstrip
     nightmode.nightBrightness = app.cfg[PLUGIN_NAME].NIGHT_BRIGHTNESS
     nightmode.lastMode = Nightmode.MODE.DAY
 
