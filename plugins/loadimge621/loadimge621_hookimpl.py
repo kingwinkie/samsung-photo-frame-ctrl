@@ -15,12 +15,12 @@ class MyImgELoader(ImgLoaderE621):
     def setRemote(self):
         """For setting web based remote from plugins. Returns list of remi.Widgets"""
         apis = list(map(lambda x: str(x)[5:],py621Types.EAPI))
-        lbl_api = gui.Label(f"API:",style={'text-align':'Left'})
+        lbl_api = gui.Label("API:",style={'text-align':'Left'})
         dd_api = gui.DropDown.new_from_list(apis,width=200, height=20, margin='4px')
         dd_api.set_value(self.app.cfg[PLUGIN_NAME].API)
         dd_api.onchange.do(self.on_dd_api_change)
         
-        lbl_tags = gui.Label(f"tags:",style={'text-align':'Left'})
+        lbl_tags = gui.Label("tags:",style={'text-align':'Left'})
         self.ti_tags = []
         self.tagRows = []
         for row, tag in enumerate(self.tags):
@@ -29,9 +29,6 @@ class MyImgELoader(ImgLoaderE621):
         self.tagsContainer = gui.Container(width=300, style={'display': 'block', 'overflow': 'auto', 'text-align': 'center','margin': '4px'})            
         self.tagsContainer.append(self.tagRows)
         bt_tag_add = gui.Button('Add', width=100, height=20,  margin='4px')
-        
-        #lv_tags = gui.ListView.new_from_list(self.app.cfg[PLUGIN_NAME].TAGS, width=300, height=120, margin='4px')
-        
         bt_tag_add.onclick.do(self.on_bt_add_pressed)
         return [lbl_api, dd_api, lbl_tags, self.tagsContainer, bt_tag_add]
     

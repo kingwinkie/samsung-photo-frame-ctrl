@@ -9,7 +9,7 @@ class Nightmode:
     nightBrightness : int # Nightmode brightness from settings
     currentMode : MODE = None # current mode. May be set through TT or from remote
     lastCheckTT : int = 0 # day timestamp (s) of the last check
-    
+    srcTable = []
     def setMode(self, mode : MODE):
         self.currentMode = mode
         if mode == Nightmode.MODE.NIGHT:
@@ -42,6 +42,7 @@ class Nightmode:
     
     def createTT(self, tt : list[tuple[str, str]]):
         """creates internal time table for getmode"""
+        self.timeTable.clear()
         for item in tt:
             ttRow = self.createTTRow(item)
             self.timeTable.append(ttRow)
@@ -105,7 +106,7 @@ class Nightmode:
         return mode.name if mode else 'DAY'
     
 
-    def on_bt_nightmode_pressed(self, widget):
+    def onBtNightModePressed(self, widget):
         """remote UI"""
         mode = self.MODE.DAY if self.getMode() == self.MODE.NIGHT else self.MODE.NIGHT
         self.setMode(mode)
@@ -116,8 +117,73 @@ class Nightmode:
     def setRemote(self):
         self.bt_nightmode = gui.Button('Night Mode', width=200, height=30,  margin='4px')
         # setting the listener for the onclick event of the button
-        self.bt_nightmode.onclick.do(self.on_bt_nightmode_pressed)
-        table = [("Time","Mode")]
-        table.extend(self.srcTable)
-        self.tab_time = gui.Table.new_from_list(table,width=300, height=100, margin='4px')
-        return [self.bt_nightmode,self.tab_time]
+        self.bt_nightmode.onclick.do(self.onBtNightModePressed)
+        
+        self.tabContainer = self.addRemoteTable()
+        btTabAdd = gui.Button('Add', width=100, height=20,  margin='4px')
+        btTabAdd.onclick.do(self.onBtAddClicked)
+        
+        return [self.bt_nightmode,self.tabContainer, btTabAdd]
+
+    def addRemoteTable(self):
+        tabContainer = gui.VBox(width=310, style={'display': 'table', 'overflow': 'auto', 'text-align': 'center','margin': '4px'})            
+        titleContainer = gui.HBox(style={'display': 'table-row'})            
+        laTime = gui.Label("Time", width=148, height=28, margin='0px', style={'display': 'table-cell', 'background':'rgba(19, 108, 209, .6)','color': 'rgb(255, 255, 255)','border': '1px','border-style': 'solid'})
+        laMode = gui.Label("Mode", width=128, height=28, margin='0px', style={'display': 'table-cell', 'background':'rgba(19, 108, 209, .6)','color': 'rgb(255, 255, 255)','border': '1px','border-style': 'solid'})
+        laX = gui.Label("X", width=18, height=28, margin='0px',style={'display': 'table-cell', 'background':'rgba(19, 108, 209, .6)','color': 'rgb(255, 255, 255)','border': '1px','border-style': 'solid'})
+        titleContainer.append([laTime, laMode, laX])
+        tabContainer.append(titleContainer)
+        for srcTime in self.srcTable:
+            timeRow = self.addRemoteRow(srcTime[0],self.MODE[srcTime[1].upper()])
+            tabContainer.append(timeRow)
+        return tabContainer
+        
+    def addRemoteRow(self, srcTime : str, mode : MODE):
+        rowContainer = gui.HBox(style={'display': 'table-row'})            
+        tiTime = gui.TextInput(width=140, height=20, margin='4px', style={'display': 'table-cell'})
+        tiTime.set_value(srcTime)
+        tiTime.onchange.do(self.onChangeRemoteTab)
+        tiTime.valType = "time"
+        #tiTime.onchange.do(self.on_tiTime_change)
+        modes = [m.name for m in self.MODE]
+        ddMode = gui.DropDown.new_from_list(modes,width=120, height=20, margin='4px',style={'display': 'table-cell'})
+        ddMode.set_value(mode.name)
+        ddMode.valType = "mode"
+        ddMode.onchange.do(self.onChangeRemoteTab)
+        btX = gui.Button(text = "X", width=10, height=20, margin='4px', style={'display': 'table-cell'})
+        btX.onclick.do(self.onBtXClicked)
+        rowContainer.append([tiTime,ddMode, btX])
+        btX.rowContainer = rowContainer
+        return rowContainer
+
+    def onChangeRemoteTab(self, widget, value):
+        self.rebuildSrcTab()
+
+    def onBtXClicked(self, widget):
+        rowContainer : gui.Container = widget.rowContainer
+        self.tabContainer.remove_child(rowContainer)
+        self.rebuildSrcTab()
+
+    def onBtAddClicked(self, widget):
+        rowContainer = self.addRemoteRow("00:00",self.MODE.DAY)    
+        self.tabContainer.append(rowContainer)
+        self.rebuildSrcTab()
+
+    def rebuildSrcTab(self):
+        self.srcTable = []
+        for child in self.tabContainer.children:
+            rowContainer = self.tabContainer.get_child(child)
+            if rowContainer and len(rowContainer.children)>1:
+                t = None
+                mode = None
+                for rowChild in rowContainer.children:
+                    widget = rowContainer.get_child(rowChild)
+                    if hasattr( widget, "valType"):
+                        if widget.valType == "time":
+                            t = widget.get_value()
+                        elif widget.valType == "mode": 
+                            mode = widget.get_value()
+                if t and mode:
+                    row = (t,mode)
+                    self.srcTable.append(row)
+        self.createTT(self.srcTable)
