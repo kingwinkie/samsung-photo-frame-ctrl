@@ -16,7 +16,6 @@ class Remote:
     serverApp : remote.RemoteWeb = None
     serverUrl : str # URL of the server
     initialRun : bool = True #for showing the QR code. 
-    fileName : str #name of the last file
     def start(self, app):
         """Starts the web app"""
         self.app = app
@@ -37,62 +36,14 @@ class Remote:
         Place for setting initail values on the web
         """
         self.serverApp = serverApp
-        self.delayTxtFB(self.app.delay)
-        self.setBrightnessFB(self.app.brightness)
-    
-    def progress(self, value, limit):
-        val = value * 100 // limit
-        if self.serverApp:
-            self.serverApp.secureUpdate(self.serverApp.nextLoad.set_value(val), val=val)
 
-    def on_brightness_changed(self, widget, value):
-        self.app.setBrightness(int(value))
-        self.app.setStage(self.app.Stage.RESIZE)
-
-    def setBrightnessFB(self, brightness : int):
-        if self.serverApp:
-            self.serverApp.secureUpdate(self.serverApp.slider_brightness.set_value( brightness ), brightness=brightness)
-
-    def delayTxtFB(self, delay : int):
-        if self.serverApp:
-            self.serverApp.secureUpdate(self.serverApp.delayTxt.set_text( str(delay)), delay=delay)
-    
-    def pauseSetText(self, text : str):
-        if self.serverApp:
-            self.serverApp.secureUpdate(self.serverApp.bt_pause.set_text(text), text=text)
-            
-
-    def on_bt_load_pressed(self, widget):
-        self.app.forceLoad = True
-
-    def on_bt_pause_pressed(self, widget):
-        self.app.paused = not self.app.paused
-        text = "Continue" if self.app.paused else "Pause"
-        self.pauseSetText(text)
-
-    def on_delayTxt_changed(self, widget, value):
-        self.app.delay = float(value)
-
-
-    def showFile(self,fullpath, fileName):
-            if self.app.load(fullpath): #lazy !!!
-                self.app.remotelyUploaded = True #informs other plugins that the picture has been remotely uploaded
-                self.fileName = fileName
-                self.app.setStage(self.app.Stage.LOAD)
-                
-    def fileupload_on_success(self,widget, fullpath, fileName):
-        self.showFile(fullpath, fileName)
-
-    def on_file_upload_input(self, widget, file_list):
-        # Get the uploaded file
-        uploaded_file = file_list[0]
-        self.showFile(uploaded_file)
     def shutdown(self):
         self.server.stop()
     
     def secureUpdate(self, func, **kwargs):
         """Thread safe update. Called from plugins"""
-        self.serverApp.secureUpdate(func, **kwargs)
+        if self.serverApp:
+            self.serverApp.secureUpdate(func, **kwargs)
 
     def getPluginsContainer(self) -> remi.gui.Container:
         """Container with list of plugins and on/off checkboxes"""
@@ -114,7 +65,7 @@ class Remote:
                     sortOrder = 0
                     
                 if hasattr(plugin, "PLUGIN_CLASS"):
-                    if plugin.PLUGIN_CLASS in ["REMOTE", "DISPLAY"]:
+                    if plugin.PLUGIN_CLASS in ["REMOTE", "DISPLAY","BASIC"]:
                         continue #ignore REMOTE
                 check = remi.gui.CheckBoxLabel(friendlyName, enabled, width=300, height=20, margin='4px', style={'justify-content': 'left'})
                 check.pluginName = pluginName
@@ -186,11 +137,7 @@ def imageChangeBefore(app) -> None:
         else:
             LOGGER.error(f"QR creation error")
         app.remote.initialRun = False
-    # add image name
-    if app.remotelyUploaded and app.remote.fileName:
-        text=f"{app.remote.fileName}"
-        app.image = drawText(text=text, size=app.cfg.FRAME.IMG_SIZE, fontSize=12, textColor=(192,192,192,192), align=(HAlign.RIGHT, VAlign.BOTTOM), bgImage=app.image, offset=(10,5))
-
+    
 
 @plugins.hookimpl
 def startup(app) -> None:
@@ -211,18 +158,4 @@ def loadCfg(app) -> None:
         "PORT" : "8088",
     }
     app.loadCfg(PLUGIN_NAME, defaultConfig) #load the real config and merge it with default values
-
-@plugins.hookimpl
-def do(app) -> None:
-    """called every second when frame is waiting to next frame.
-    Intended for showing real time etc.
-    """
-    app.remote.progress(app.idleIter, int(app.delay))
-
-@plugins.hookimpl
-def brightnessChangeAfter(app, brightness : int) -> None:
-    """called after brightness value was changed. Brightness is 0-255
-    Intended as a feedback for remote
-    """
-    app.remote.setBrightnessFB(brightness)
 

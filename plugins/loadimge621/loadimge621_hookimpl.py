@@ -2,11 +2,16 @@ import plugins
 from py621 import types as py621Types
 from imgeloader import ImgLoaderE621
 from remi import gui
+import logging as LOGGER
+
 PLUGIN_NAME = "LOADIMGE621"
 PLUGIN_FANCY_NAME = "E621 Gallery"
 PLUGIN_CLASS = "LOADER"
 PLUGIN_SORT_ORDER = 210
 class MyImgELoader(ImgLoaderE621):
+    ti_tags : list[gui.TextInput]
+    tagRows : list[gui.Container] # list of tag text inputs
+    tagsContainer : gui.Container
     def setRemote(self):
         """For setting web based remote from plugins. Returns list of remi.Widgets"""
         apis = list(map(lambda x: str(x)[5:],py621Types.EAPI))
@@ -14,21 +19,69 @@ class MyImgELoader(ImgLoaderE621):
         dd_api = gui.DropDown.new_from_list(apis,width=200, height=20, margin='4px')
         dd_api.set_value(self.app.cfg[PLUGIN_NAME].API)
         dd_api.onchange.do(self.on_dd_api_change)
+        
         lbl_tags = gui.Label(f"tags:",style={'text-align':'Left'})
-        lv_tags = gui.ListView.new_from_list(self.app.cfg[PLUGIN_NAME].TAGS, width=300, height=120, margin='4px')
-        bt_add = gui.Button('Add', width=100, height=20,  margin='4px')
-        bt_add.onclick.do(self.on_bt_add_pressed)
-        return [lbl_api, dd_api, lbl_tags, lv_tags, bt_add]
+        self.ti_tags = []
+        self.tagRows = []
+        for row, tag in enumerate(self.tags):
+            tagRow = self.addTiTag(tag, row)
+            self.tagRows.append(tagRow)
+        self.tagsContainer = gui.Container(width=300, style={'display': 'block', 'overflow': 'auto', 'text-align': 'center','margin': '4px'})            
+        self.tagsContainer.append(self.tagRows)
+        bt_tag_add = gui.Button('Add', width=100, height=20,  margin='4px')
+        
+        #lv_tags = gui.ListView.new_from_list(self.app.cfg[PLUGIN_NAME].TAGS, width=300, height=120, margin='4px')
+        
+        bt_tag_add.onclick.do(self.on_bt_add_pressed)
+        return [lbl_api, dd_api, lbl_tags, self.tagsContainer, bt_tag_add]
     
+    def addTiTag(self, tag : str, row : int) -> gui.Container:
+        #ti_tag = gui.TextInput(width=200, height=20, margin='10px')
+        #rowContainer = gui.Container(width=300, style={'display': 'inline', 'overflow': 'auto', 'margin': '0px'})            
+        rowContainer = gui.Container(width=300, style={'display': 'inline'})            
+        ti_tag = gui.TextInput(width=200, height=20, margin='4px', style={'float': 'left'})
+        ti_tag.row = row
+        ti_tag.set_value(tag)
+        ti_tag.onchange.do(self.on_ti_tag_change)
+        self.ti_tags.append(ti_tag)
+        btX = gui.Button(text = "X", width=20, height=20, margin='4px', style={'float': 'left'})
+        btX.row = row
+        btX.onclick.do(self.on_btX_clicked)
+        rowContainer.append([ti_tag, btX])
+        btX.rowContainer = rowContainer
+        return rowContainer
+
+    def reload(self):
+        self.imageb = None
+        self.app.setStage(None) #force reload
+
+    def on_btX_clicked(self, widget):
+        rowContainer : gui.Container = widget.rowContainer
+        self.tagsContainer.remove_child(rowContainer)
+        self.rebuildTags()
+        self.reload()
+
+    def on_ti_tag_change(self, widget, value):
+            self.rebuildTags()
+            self.reload()
+
+    def rebuildTags(self):
+        """re-creates internal array of tags"""
+        self.tags.clear()
+        for ti_tag in self.ti_tags:
+            self.tags.append(ti_tag.get_value())
+
     def on_bt_add_pressed(self, widget):
-            ...
+        self.tags.append("")
+        ti_tag = self.addTiTag("",len(self.tags) - 1)    
+        self.tagsContainer.append(ti_tag)
 
     def on_dd_api_change(self, widget, value):
         self.api = value
         self.url = None # force load new URL
         self.imageb = None # reset the downloaded image
         self.pages = self.app.cfg[PLUGIN_NAME].PAGES #has to be re-read from config
-        self.app.setStage(None) #force reload
+        self.reload()
         
 pluginImgLoaderE = MyImgELoader() 
 @plugins.hookimpl

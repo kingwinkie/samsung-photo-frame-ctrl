@@ -214,6 +214,7 @@ class api:
                 eRequest = requests.get(RequestLink, headers=headers)
         except requests.exceptions.ConnectionError as e:
             LOGGER.error(f"Connection Error {e}")
+            return None
         # Verify status codes
         handleCodes(eRequest.status_code)
 

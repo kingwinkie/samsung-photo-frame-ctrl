@@ -137,8 +137,8 @@ def drawText(text : str, size : tuple[int,int], fontSize : int, textColor, align
 def getAvailableFonts(fontPath : str = None) -> list[str]:
     """Returns list of fontPaths found in fontPath or in ./font """
     fontPaths : list[str] = []
-    realPath = osp.join(osp.realpath(osp.dirname(__file__)))
-    search = osp.join(osp.join(realPath, "font"),"*.ttf")
+    realPath = osp.realpath(osp.dirname(__file__))
+    search = osp.join(realPath, "font","*.ttf")
     fontPaths = glob.glob(search)
     if fontPath:
         search = osp.join(fontPath,"*.ttf")

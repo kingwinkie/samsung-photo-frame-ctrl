@@ -34,7 +34,7 @@ class Clocks:
         self.remote_fontSize = gui.Slider(self.fontSize, 50, 700, 10, width=200, height=10, margin='1px')
         self.lbl_font = gui.Label(f"Font:",style={'text-align':'Left'})
         fontDescs = imgutils.getAvailableFontsDesc()
-        fontNames : str = map( lambda fd : fd[0], fontDescs)
+        fontNames, _ = zip(*fontDescs)
         self.dd_font = gui.DropDown.new_from_list(fontNames,width=200, height=20, margin='4px')
         fontName : str = None if not self.fontDesc else self.fontDesc[0]
         self.dd_font.set_value(fontName)

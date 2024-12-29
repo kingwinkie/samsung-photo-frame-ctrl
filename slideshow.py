@@ -5,6 +5,7 @@ import logging as LOGGER
 import imgutils as imgutils
 import time
 import plugins
+import slideshow_hookimpl
 from os import path as osp
 from PIL import Image
 from dynaconf import Dynaconf,loaders
@@ -78,8 +79,7 @@ class SlideShow:
     def get_plugin_manager(self):
         self.pm = plugins.FramePluginManager("slideshow")
         self.pm.add_hookspecs(hookspecs)
-        #available = self.pm.listOfAvailablePlugins()
-        #self.pm.load_all_plugins(self.cfg.PLUGINS.ACTIVE)
+        self.pm.register(slideshow_hookimpl)
         self.pm.loadAllPluginsFromDir(active=self.cfg.PLUGINS.ACTIVE)
         
         

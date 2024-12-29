@@ -34,7 +34,8 @@ class ImgLoaderE621(ImgLoader):
 
         # Get posts from the Pool object
         posts = api.getPosts(self.tags,70,page,False) #negative tags don't work with True
-        end : int = len(posts)
+        
+        end : int = 0 if not posts else len(posts)
         LOGGER.debug(f"Found {end} posts")
 
         if end:
