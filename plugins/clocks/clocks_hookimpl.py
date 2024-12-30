@@ -28,22 +28,25 @@ class Clocks:
         self.shownTime = text
     # remote UI
     def setRemote(self):
-        self.lblColor = gui.Label('Color:', style={'text-align':'Left'})
-        self.remote_colorPicker = gui.ColorPicker(default_value=self.textColor)
+        lblColor = gui.Label('Color:', style={'text-align':'Left'})
+        self.remote_colorPicker = gui.ColorPicker(default_value=self.textColor, width=200, height=20, margin='4px')
+        sizeCont = gui.HBox()
+        sizeCont.append([lblColor, self.remote_colorPicker])
         self.lblSize = gui.Label(f'Size: {self.fontSize} px', style={'text-align':'Left'})
         self.remote_fontSize = gui.Slider(self.fontSize, 50, 700, 10, width=200, height=10, margin='1px')
-        self.lbl_font = gui.Label(f"Font:",style={'text-align':'Left'})
+        lbl_font = gui.Label(f"Font:",style={'text-align':'Left'})
         fontDescs = imgutils.getAvailableFontsDesc()
         fontNames, _ = zip(*fontDescs)
         self.dd_font = gui.DropDown.new_from_list(fontNames,width=200, height=20, margin='4px')
         fontName : str = None if not self.fontDesc else self.fontDesc[0]
         self.dd_font.set_value(fontName)
         self.dd_font.onchange.do(self.on_dd_font_change)
-            
+        fontCont = gui.HBox()
+        fontCont.append([lbl_font, self.dd_font])
         # setting the listener for the onclick event of the button
         self.remote_colorPicker.onchange.do(self.on_remote_colorPicker_changed)
         self.remote_fontSize.onchange.do(self.on_remote_fontSize_changed)
-        return [self.lblColor, self.remote_colorPicker, self.lblSize, self.remote_fontSize, self.lbl_font, self.dd_font]
+        return [sizeCont, self.lblSize, self.remote_fontSize, fontCont]
     
     def on_dd_font_change(self, widget, value):
         self.fontDesc = imgutils.getFontDescByName(value)

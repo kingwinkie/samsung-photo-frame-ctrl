@@ -28,8 +28,10 @@ class Remote:
         self.bt_load = gui.Button('Load', width=200, height=30, margin='4px')
         self.bt_load.onclick.do(self.on_bt_load_pressed)
         self.nextLoad = gui.Progress(1, 100, width=200, height=5)
-        self.delayTxt_lbl = gui.Label('Delay (s):', height=20, style={'text-align':'Left','margin-top':'10px'})
-        self.delayTxt = gui.TextInput(width=60, height=20, margin='10px')
+        delayTxt_lbl = gui.Label('Delay (s):', height=20, style={'text-align':'Left','margin':'4px'})
+        self.delayTxt = gui.TextInput(width=60, height=20)
+        delayCont = gui.HBox(margin='4px')
+        delayCont.append([delayTxt_lbl, self.delayTxt])
         self.delayTxt.onchange.do(self.on_delayTxt_changed)
 
         self.slider_brightness_lbl = gui.Label('Brightness:', height=20, margin_top='10px', style={'text-align':'Left'})
@@ -40,12 +42,14 @@ class Remote:
         self.uploadPath = os.path.join(realPath,"uploads")
         if not os.path.isdir(self.uploadPath):
             os.mkdir(self.uploadPath)
-        self.btUploadPhotoLbl = gui.Label('Upload:', height=20, margin_top='10px', style={'text-align':'Left'})
-        self.btUploadPhoto = gui.FileUploader(self.uploadPath, width=200, height=30, margin='5px',accepted_files='*.jpg')
+        btUploadPhotoLbl = gui.Label('Upload:', height=20, margin='4px', style={'text-align':'Left'})
+        self.btUploadPhoto = gui.FileUploader(self.uploadPath, width=200, height=30, margin='4px',accepted_files='*.jpg')
+        uploadCont = gui.HBox()
+        uploadCont.append([btUploadPhotoLbl, self.btUploadPhoto])
         self.btUploadPhoto.onsuccess.do(self.fileupload_on_success)
         self.btUploadPhoto.onfailed.do(self.fileupload_on_failed)
 
-        return([self.lbl, self.bt_pause, self.bt_load, self.nextLoad, self.delayTxt_lbl,self.delayTxt,self.slider_brightness_lbl, self.slider_brightness, self.btUploadPhotoLbl, self.btUploadPhoto])
+        return([self.lbl, self.bt_pause, self.bt_load, self.nextLoad, delayCont,self.slider_brightness_lbl, self.slider_brightness, uploadCont])
 
     def on_brightness_changed(self, widget, value):
             self.app.setBrightness(int(value))
@@ -74,9 +78,9 @@ class Remote:
 
     def showFile(self,fullpath, fileName):
             if self.app.load(fullpath): #lazy !!!
-                self.app.remotelyUploaded = True #informs other plugins that the picture has been remotely uploaded
                 fileName = fileName
                 self.fileName = fileName
+                self.app.loadedByPlugin = PLUGIN_NAME
                 self.app.setStage(self.app.Stage.LOAD)
                 
     def fileupload_on_success(self,widget, filename):
@@ -130,7 +134,7 @@ def imageChangeBefore(app) -> None:
     Intended for effects etc. Image is in app.image
     """
     # add image name
-    if app.remotelyUploaded and remote.fileName:
+    if app.loadedByPlugin == PLUGIN_NAME and remote.fileName:
         text=f"{remote.fileName}"
         app.image = drawText(text=text, size=app.cfg.FRAME.IMG_SIZE, fontSize=12, textColor=(192,192,192,192), align=(HAlign.RIGHT, VAlign.BOTTOM), bgImage=app.image, offset=(10,5))
 

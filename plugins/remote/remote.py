@@ -11,7 +11,9 @@ class RemoteWeb(remi.App):
         self.pluginContainers = []
         caller = userdata
         # the margin 0px auto centers the main container
-        self.verticalContainer = gui.Container(width='100%', margin='0px auto', style={'display': 'block', 'overflow': 'hidden'})
+        bodyContainer = gui.Container(width='100%', margin='0px auto', style={'display': 'block', 'overflow': 'hidden'})
+        self.verticalContainer = gui.VBox(margin='0px auto', style={'width': '100%', 'min-width': '300px','max-width': '500px'})
+        bodyContainer.append(self.verticalContainer)
         
         plugins : list[tuple[str,tuple[str,list[remi.Widget]]]]= caller.createRemote()
         for plugin in plugins:
@@ -28,8 +30,8 @@ class RemoteWeb(remi.App):
     
     def addPluginContainer(self, pluginName , pluginFancyName, plugin):
         """adds container with one plugin"""
-        pluginContainer = gui.Container(width=320, style={'display': 'block', 'overflow': 'auto', 'text-align': 'center', 'border-color': 'gray', 'border-width': '2px', 'border-style': 'solid','margin': '4px', 'padding': '2px'})
-        label = gui.Label(pluginFancyName, height=12, margin='0px', style={'color':'white','background-color':'rgb(3, 88, 200)', 'font-size':'8px', 'margin-bottom':'10px'})
+        pluginContainer = gui.VBox(style={'width':'100%', 'display': 'block', 'overflow': 'auto', 'text-align': 'center', 'border-color': 'gray', 'border-width': '2px', 'border-style': 'solid','margin': '4px', 'padding': '2px'})
+        label = gui.Label(pluginFancyName, height=12, margin='0px', style={'color':'white','background-color':'rgb(3, 88, 200)', 'font-size':'8px', 'margin-bottom':'10px', 'width':'100%'})
         pluginContainer.append(label)
         pluginContainer.append(plugin)
         pluginContainer.pluginName = pluginName

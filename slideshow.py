@@ -14,6 +14,7 @@ import plugins.hookspecs as hookspecs
 from enum import IntEnum
 import threading
 import remi
+import random
 
 class SlideShow:
     class Stage(IntEnum):
@@ -25,7 +26,8 @@ class SlideShow:
             newStage = SlideShow.Stage((self+1)%len(SlideShow.Stage))
             LOGGER.debug(f"New Stage: {newStage.name}")
             return newStage
-            
+
+    loadedByPlugin : str = None # plugin which loaded the active image            
     image : Image = None # current image
     loadedImage : Image = None # image as it has been loaded
     brightnessMask : int = (0,0,0,0) #Initial Brightness is 100% with no color modification.
@@ -38,7 +40,6 @@ class SlideShow:
     forceLoad : bool = False # load request via remote 
     idleIter : int = 0 # Idle iterator. Set in Show() because plugins may change it
     stage : Stage = Stage.LOAD # Current stage. Stages are : 0 = load, 1 = resize, 2 = show, 3 = idle
-    remotelyUploaded : bool = False # The picture has been uploaded remotely via RC. Info for plugins
     cond : threading.Condition #notifycation for idle sleep 
     @property
     def brightness(self):
@@ -109,12 +110,20 @@ class SlideShow:
         
     def load(self, buffer : bytes = None) -> bool:
         """loads a new image. Buffer is here to force a specific image from plugins"""
-        self.remotelyUploaded = False #turn the flag off
         self.idleIter = 0
+        self.loadedByPlugin = None
         if not buffer:
-            buffers = self.pm.hook.load(app=self)
+            hookImpls = self.pm.hook.load.get_hookimpls()
+            buffers = []
+            for hookImpl in hookImpls:
+                buffers.append((hookImpl.plugin,hookImpl.function(app=self))) #call plugins
+            buffers = list(filter(lambda b: b[1], buffers)) #filter out invalid results
             if buffers:
-                buffer = buffers[0]
+                if len(buffers)>1:
+                    plugin,buffer = random.choice(buffers) # randomize the result
+                else:
+                    plugin,buffer = buffers[0] # return first buffer
+                self.loadedByPlugin = plugin.PLUGIN_NAME
             
         if buffer:
             self.loadedImage = imgutils.bytes2img(buffer)
@@ -169,14 +178,13 @@ class SlideShow:
                     self.stage = self.Stage.LOAD
                 if not self.load():
                     LOGGER.error("Image wasn't loaded")
-                    time.sleep(10) #connection lost. Request was too fast etc.
-                    self.stage = None #try again
+                    self.stage = self.Stage.SHOW #go to idle directly
 
             elif self.stage == self.Stage.RESIZE:
                 self.resize()
             elif self.stage == self.Stage.SHOW:
                 if not self.show(): 
-                    time.sleep(10) #connection lost. Request was too fast etc.
+                    time.sleep(10) #Display disconnected, not in monitor mode etc.
             elif self.stage == self.Stage.IDLE:
                 self.idle()
             if self.stage != None:

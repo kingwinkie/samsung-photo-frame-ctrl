@@ -9,7 +9,7 @@ PLUGIN_SORT_ORDER = 200
 
 @plugins.hookimpl
 def imageChangeBefore(app):
-    if not app.remotelyUploaded:
+    if app.loadedByPlugin == PLUGIN_NAME:
         artsyImgLoader : ImgLoaderArtsy = app.artsyImgLoader
         app.image = drawText(text=artsyImgLoader.description, size=artsyImgLoader.size, fontSize=12, textColor=(192,192,192,192), align=(HAlign.RIGHT, VAlign.BOTTOM), bgImage=app.image, offset=(10,5))
 

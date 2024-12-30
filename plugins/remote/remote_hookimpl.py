@@ -50,8 +50,8 @@ class Remote:
         container = None
         pl = self.app.pm.getAvailablePlugins()
         if pl:
-            container = remi.gui.Container(width=320, style={'display': 'block', 'overflow': 'auto', 'text-align': 'center', 'border-color': 'gray', 'border-width': '2px', 'border-style': 'solid','margin': '4px', 'padding': '2px'})
-            label = remi.gui.Label("Plugins", height=12, margin='0px', style={'color':'white','background-color':'rgb(3, 88, 200)', 'font-size':'8px', 'margin-bottom':'10px'})
+            container = remi.gui.VBox(style={'width': '100%', 'text-align': 'center', 'border-color': 'gray', 'border-width': '2px', 'border-style': 'solid','margin': '4px', 'padding': '2px', 'align-items':'left'})
+            label = remi.gui.Label("Plugins", height=12, margin='0px', style={'width': '100%', 'color':'white','background-color':'rgb(3, 88, 200)', 'font-size':'8px', 'margin-bottom':'10px'})
             container.append(label)
             checks = []
             for enabled, plugin in pl:
