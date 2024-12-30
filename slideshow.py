@@ -178,7 +178,9 @@ class SlideShow:
                     self.stage = self.Stage.LOAD
                 if not self.load():
                     LOGGER.error("Image wasn't loaded")
-                    self.stage = self.Stage.SHOW #go to idle directly
+                    time.sleep(1)
+                    self.idleIter = 0
+                    self.stage = self.Stage.SHOW #go directly to idle
 
             elif self.stage == self.Stage.RESIZE:
                 self.resize()

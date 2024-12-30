@@ -136,3 +136,4 @@ deploy2frame.sh
 data/
 # Ignore dynaconf secret files
 .secrets.*
+.secrets.token.json

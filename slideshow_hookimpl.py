@@ -56,7 +56,8 @@ class Remote:
             self.app.setStage(self.app.Stage.RESIZE)
 
     def setBrightnessFB(self, brightness : int):
-        self.app.remote.secureUpdate(self.slider_brightness.set_value(brightness), brightness=brightness)
+        if hasattr(self, 'slider_brightness'):
+            self.app.remote.secureUpdate(self.slider_brightness.set_value(brightness), brightness=brightness)
         
 
     def delayTxtFB(self, delay : int):

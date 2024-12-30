@@ -74,17 +74,14 @@ class ImgLoaderArtsy(ImgLoader):
                     
         except requests.exceptions.ConnectionError as connError:
             LOGGER.error(f"Image downloading error {connError}")
+
     def load(self):
         """
         Load (return) the image
         """
-        if not self.imageb:
-            self.prepare() # force load when image is not available
-        
-        imageb = self.imageb
-        self.description=f"{self.artwork['slug']} ({self.artwork['date']})"
-
-        self.imageb = None
+        imageb = super().load()
+        if imageb:
+            self.description=f"{self.artwork['slug']} ({self.artwork['date']})"
         return imageb
 
 
