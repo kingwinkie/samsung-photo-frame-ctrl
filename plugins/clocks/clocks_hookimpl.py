@@ -9,6 +9,7 @@ import remi.gui as gui
 PLUGIN_NAME = "CLOCKS"
 PLUGIN_FANCY_NAME = "Clocks"
 PLUGIN_SORT_ORDER = 300
+PLUGIN_CLASS = "EFFECT"
 class Clocks:
     currentImage : Image
     app : SlideShow
@@ -96,7 +97,7 @@ def loadCfg(app) -> None:
     """
     defaultConfig = {
         "FORMAT" : "24h",
-        "FILL" : "white",
+        "FILL" : "#F5F5DC",
         "FONT" : None
     }
     app.loadCfg(PLUGIN_NAME, defaultConfig)

@@ -106,7 +106,7 @@ class Remote:
     
     def progress(self, value, limit):
         val = value * 100 // limit
-        if self.nextLoad:
+        if hasattr(self, "nextLoad") and self.nextLoad:
             self.nextLoad.set_value(val)
 
 remote : Remote = None

@@ -138,7 +138,7 @@ def getAvailableFonts(fontPath : str = None) -> list[str]:
     """Returns list of fontPaths found in fontPath or in ./font """
     fontPaths : list[str] = []
     realPath = osp.realpath(osp.dirname(__file__))
-    search = osp.join(realPath, "font","*.ttf")
+    search = osp.join(realPath, "res","fonts","*.ttf")
     fontPaths = glob.glob(search)
     if fontPath:
         search = osp.join(fontPath,"*.ttf")
