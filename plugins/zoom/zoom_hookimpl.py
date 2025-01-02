@@ -91,7 +91,7 @@ def loadCfg(app) -> None:
 def ResizeBefore(app):
     """Called before resize"""
     imgSize = app.image.size
-    frameSize = app.cfg.FRAME.IMG_SIZE
+    frameSize = app.frameSize
     imgSizeNorm = imgutils.imgSizeCalc(imgSize, frameSize, imgutils.RMode.SHRINK)
     if imgSizeNorm[Dimension.WIDTH] < frameSize[Dimension.WIDTH]:
         # image width < frame width

@@ -6,6 +6,7 @@ import imgutils as imgutils
 import time
 import plugins
 import slideshow_hookimpl
+import pluginmanager_hookimpl
 from os import path as osp
 from PIL import Image
 from dynaconf import Dynaconf,loaders
@@ -29,6 +30,7 @@ class SlideShow:
 
     loadedByPlugin : str = None # plugin which loaded the active image            
     image : Image = None # current image
+    resizedImage : Image = None # image after resize stage
     loadedImage : Image = None # image as it has been loaded
     brightnessMask : int = (0,0,0,0) #Initial Brightness is 100% with no color modification.
     delay : float = 60.0 # Delay between photos in seconds
@@ -41,6 +43,7 @@ class SlideShow:
     idleIter : int = 0 # Idle iterator. Set in Show() because plugins may change it
     stage : Stage = Stage.LOAD # Current stage. Stages are : 0 = load, 1 = resize, 2 = show, 3 = idle
     cond : threading.Condition #notifycation for idle sleep 
+    frameSize : tuple[int,int] = (1024,800) # Frame size
     @property
     def brightness(self):
         return 255-self.brightnessMask[3]
@@ -49,7 +52,9 @@ class SlideShow:
 
     def __init__(self):
         self.cond = threading.Condition()
-    
+
+   
+
     def createRemote(self) -> list[list[remi.Widget]]:
         """Called from remote (if exists). For setting remote UI in plugins"""
         hookImpls = self.pm.hook.setRemote.get_hookimpls()
@@ -58,38 +63,53 @@ class SlideShow:
             widgets.append((hookImpl.plugin_name,
                             self.pm.getFancyName(hookImpl.plugin, False),
                              hookImpl.function(app=self))) #call plugins
-        
-        return widgets
-
-    def idle(self):
-        """Calls do() in plugins"""
-        wait = 1 # wait 1s
-        while (self.idleIter < self.delay or self.paused) and self.stage == self.Stage.IDLE:
-            if not self.paused:
-                self.idleIter += wait
-            start = time.time()
-            self.pm.hook.do(app=self) #call plugins
-            delta = time.time() - start #measure time lost in plugins
-            waitD = wait - delta
-            if self.quit: return
-            if self.forceLoad: return
-            if waitD > 0:
-                with self.cond:
-                    self.cond.wait(waitD)
-            
+        return widgets         
     def get_plugin_manager(self):
         self.pm = plugins.FramePluginManager("slideshow")
         self.pm.add_hookspecs(hookspecs)
         self.pm.register(slideshow_hookimpl)
+        self.pm.register(pluginmanager_hookimpl)
+        defaultConfig = {"ACTIVE" : ["DUMMYFRAME","REMOTE","NIGHTMODE","CLOCKS","URLLOADER"]}
+        self.loadCfg("PLUGINS", defaultConfig) #load the real config and merge it with default values
         self.pm.loadAllPluginsFromDir(active=self.cfg.PLUGINS.ACTIVE)
         
         
+    def registerPlugin(self,pluginName : str):
+        plugin = self.pm.getAvailablePlugin(pluginName)
+        if plugin:
+            self.pm.register(plugin)
+            # call startup
+            if hasattr(plugin, "loadCfg"):
+                plugin.loadCfg(self)
+            if hasattr(plugin, "startup"):
+                plugin.startup(self)
+            stage = self.Stage.LOAD
+            if hasattr(self, "remote") and hasattr(plugin, "setRemote"):
+                self.remote.serverApp.addPluginContainer(plugin.PLUGIN_NAME,
+                    self.pm.getFancyName(plugin, False),
+                    plugin.setRemote(app=self)) #call plugin
+            if hasattr(plugin, "PLUGIN_CLASS"):
+                if plugin.PLUGIN_CLASS == "LOADER":
+                    stage = None
+            self.setStage(stage) #force reload
+    
+    def unregisterPlugin(self, plugin : str):
+        # unchecked - clean and deregister the plugin
+        pluginName : str = plugin.PLUGIN_NAME
+        if hasattr(plugin, "exit"):
+            plugin.exit(app=self)
+        self.pm.unregister(plugin)
+        self.setStage(self.Stage.LOAD)
+        if hasattr(self, "remote"):
+            self.remote.serverApp.removePluginContainer(pluginName)
+
+
     def sendToFrame(self):
         """Shows the image at defined frames"""
         self.imageBeforeEffects = self.image
         self.pm.hook.imageChangeBeforeEffects(app=self) # call effect plugins here (for nightmode etc.)
-        if (self.image.size != tuple(self.cfg.FRAME.IMG_SIZE)): # final size check. Wrong size can break the frame
-            self.image = imgutils.resize_and_centerImg(self.image, self.cfg.FRAME.IMG_SIZE)
+        if (self.image.size != tuple(self.frameSize)): # final size check. Wrong size can break the frame
+            self.image = imgutils.resize_and_centerImg(self.image, self.frameSize)
         ret : list[bool] = self.pm.hook.showImage(app=self)
         if ret and any(ret): 
             return True
@@ -103,12 +123,12 @@ class SlideShow:
         if self.brightnessMask == (0,0,0,0): #ignore for default situation
             ...
         else:
-            image = Image.new('RGBA', self.cfg.FRAME.IMG_SIZE , self.brightnessMask)
+            image = Image.new('RGBA', self.frameSize , self.brightnessMask)
             self.image = imgutils.pasteImage(bgImage=self.image, fgImage=image)
         self.pm.hook.brightnessChangeAfter(app=self, brightness=brightness)
 
         
-    def load(self, buffer : bytes = None) -> bool:
+    def stageLoad(self, buffer : bytes = None) -> bool:
         """loads a new image. Buffer is here to force a specific image from plugins"""
         self.idleIter = 0
         self.loadedByPlugin = None
@@ -132,19 +152,22 @@ class SlideShow:
                 self.forceLoad = False #new image has been loaded or it failed
                 self.pm.hook.loadAfter(app=self)
                 return True #must returns True if success because of plugins
+        #show last downloaded image. At least show something
+        self.image = self.loadedImage
+        return True
 
-    def resize(self):
+    def stageResize(self):
         """Resize to fit the frame"""
         if self.image:
             ret = self.pm.hook.ResizeBefore(app=self)
             if ret and any(ret): #at least one ResizeBefore returned True
                 self.resizedImage = self.image
             else:
-                self.resizedImage = imgutils.resize_and_centerImg(self.image, self.cfg.FRAME.IMG_SIZE)
+                self.resizedImage = imgutils.resize_and_centerImg(self.image, self.frameSize)
             self.image = self.resizedImage
             self.pm.hook.ResizeAfter(app=self)
 
-    def show(self):
+    def stageShow(self):
         if self.image:
             self.pm.hook.imageChangeBefore(app=self)
             self.setBrightness(self.brightness)
@@ -152,6 +175,21 @@ class SlideShow:
                 self.pm.hook.imageChangeAfter(app=self)
                 return True
     
+    def stageIdle(self):
+        """Calls do() in plugins"""
+        wait = 1 # wait 1s
+        while (self.idleIter < self.delay or self.paused) and self.stage == self.Stage.IDLE:
+            if not self.paused:
+                self.idleIter += wait
+            start = time.time()
+            self.pm.hook.do(app=self) #call plugins
+            delta = time.time() - start #measure time lost in plugins
+            waitD = wait - delta
+            if self.quit: return
+            if self.forceLoad: return
+            if waitD > 0:
+                with self.cond:
+                    self.cond.wait(waitD)
 
     def setStage(self, stage : int ):
         """For calling from plugins. Sets correct image for the stage"""
@@ -176,41 +214,44 @@ class SlideShow:
             if self.stage == self.Stage.LOAD or self.stage == None:
                 if self.stage == None:
                     self.stage = self.Stage.LOAD
-                if not self.load():
+                if not self.stageLoad():
                     LOGGER.error("Image wasn't loaded")
                     time.sleep(1)
                     self.idleIter = 0
                     self.stage = self.Stage.SHOW #go directly to idle
 
             elif self.stage == self.Stage.RESIZE:
-                self.resize()
+                self.stageResize()
             elif self.stage == self.Stage.SHOW:
-                if not self.show(): 
+                if not self.stageShow(): 
                     time.sleep(10) #Display disconnected, not in monitor mode etc.
             elif self.stage == self.Stage.IDLE:
-                self.idle()
+                self.stageIdle()
             if self.stage != None:
                 self.setStage(self.stage.nextStage())
 
-    def saveCfg(self, path):
-        data = self.cfg.as_dict()
-        dbox = DynaBox(data).to_dict()
-        loaders.write(filename=osp.join(path,"settings.toml"), data=dbox, merge=True)
+    def saveCfg(self, pluginName : str, data):
+        dm = {"dynaconf_merge": False}
+        data.update(dm)
+        dbox = DynaBox({pluginName : data})
+        loaders.write(filename=osp.join(self.cfg.root_path_for_dynaconf,"settings.local.toml"), data=dbox, merge=True)
 
-    @staticmethod
-    def loadCfg(section : str, data : dict):
-        global settings
-        setattr(settings,section, settings.get(section,data))
+    def loadCfg(self, section : str, data : dict):
+        setattr(self.cfg,section, self.cfg.get(section,data))
+        # Workaround for dynaconf merge issue
+        for key in data.keys():
+            if key not in self.cfg[section]:
+                self.cfg[section][key] = data[key]
 
-    def run(self):
-        self.cfg = settings
-        self.get_plugin_manager()
-
-        self.pm.hook.loadCfg(app=self) #loads defaults
-
+    def saveCfgAll(self):
+        self.pm.hook.saveCfg(app=self) #save current plugins config.
         
+    def run(self, cfg : Dynaconf ):
+        self.cfg = cfg
+        self.frameSize = self.cfg.FRAME.IMG_SIZE
+        self.get_plugin_manager()
+        self.pm.hook.loadCfg(app=self) #loads defaults
         self.pm.hook.startup(app=self)
-        self.delay = self.cfg.FRAME.DELAY
         try:
             self.stages()
         except KeyboardInterrupt:
@@ -219,12 +260,13 @@ class SlideShow:
         
 slideShow : SlideShow = None
 if __name__ == '__main__':
-    realPath = osp.join(osp.realpath(osp.dirname(__file__)))
     settings = Dynaconf(
         envvar_prefix="FRAME",
-        settings_files=[osp.join(realPath,'settings.toml'), osp.join(realPath,'.secrets.toml')]
-        )
+        root_path=osp.realpath(osp.dirname(__file__)),
+        settings_files=['settings.toml','.secrets.toml'],
 
-    LOGGER.basicConfig(level=settings.FRAME.LOGLEVEL, format="%(asctime)s %(levelname)s:%(name)s:%(message)s")
+        )
+    loglevel = settings.FRAME.LOGLEVEL if hasattr(settings,"FRAME") and hasattr(settings.FRAME, "LOGLEVEL") else "INFO"
+    LOGGER.basicConfig(level=loglevel, format="%(asctime)s %(levelname)s:%(name)s:%(message)s")
     slideShow = SlideShow()
-    slideShow.run()
+    slideShow.run(settings)

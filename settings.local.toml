@@ -1,23 +1,49 @@
-[FRAME]
-dynaconf_merge=true
-MODEL = ""
+dynaconf_merge = true
+
+[SLIDESHOW]
+DELAY = 60.0
 
 [PLUGINS]
 ACTIVE = [
-    "NIGHTMODE",
-    "CLOCKS",
-    "LOADIMGARTSY",
+    "COUNTDOWN",
     "DUMMYFRAME",
+    "LOADIMGURL",
+    "NIGHTMODE",
     "REMOTE",
-    "ZOOM"
+    "ZOOM",
 ]
 
+[LOADIMGURL]
+IMG_SOURCE_PATH = "https://random.imagecdn.app/1024/400"
+
 [NIGHTMODE]
-    "TIMES" = [["12:36", "night"],
-        ["12:37", "day"],
-        ]
-    "NIGHT_BRIGHTNESS" = 10
+NIGHT_BRIGHTNESS = 10
+TIMES = [
+    [
+        "12:36",
+        "NIGHT",
+    ],
+    [
+        "12:44",
+        "DAY",
+    ],
+]
+
+[COUNTDOWN]
+FILL = "#00ff00"
+FONT = "Roboto"
+SIZE = 200
+TIME = "2025-01-02 21:00:00"
+NAME = "domůůů"
+
+[CLOCKS]
+FILL = "#F5F5DC"
+FONT = "Bearpaw"
+SIZE = 420
+
+[FRAME]
+MODEL = ""
 
 [REMOTE]
-ADDRESS="localhost"
-PORT=8088
+ADDRESS = "localhost"
+PORT = 8088

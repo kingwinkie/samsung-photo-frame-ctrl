@@ -20,9 +20,6 @@ class RemoteWeb(remi.App):
             pluginName, pluginFancyName, pluginDescr = plugin
             self.addPluginContainer(pluginName, pluginFancyName, pluginDescr)
         
-        pluginSelectionContainer = caller.getPluginsContainer()
-        self.verticalContainer.append([pluginSelectionContainer])
-
         caller.on_init(self)
         # returning the root widget
         LOGGER.debug("RC Web started")

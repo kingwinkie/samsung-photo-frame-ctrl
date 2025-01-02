@@ -41,6 +41,13 @@ def loadCfg(app) -> None:
     """
 
 @hookspec
+def saveCfg(app) -> None:
+    """called before startup
+    Placeholder for plugin settings to be stored.
+    Use app.saveCfg(PLUGIN_NAME, dict_with_config)
+    """
+
+@hookspec
 def do(app) -> None:
     """called every second when frame is waiting to next frame.
     Intended for showing real time etc.

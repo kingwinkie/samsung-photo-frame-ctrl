@@ -63,7 +63,7 @@ def create_plugin_manager():
 
 class FramePluginManager(pluggy.PluginManager):
     pluginsAvailable : list[tuple[bool,str, ModuleType]] = []
-
+    
     def load_all_plugins(self, paths : str, active : list[str]=None):
         """Register the core plugins, load plugins from setuptools entry points
         and the load given module/package paths.

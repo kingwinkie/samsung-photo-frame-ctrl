@@ -48,8 +48,14 @@ class Remote:
         uploadCont.append([btUploadPhotoLbl, self.btUploadPhoto])
         self.btUploadPhoto.onsuccess.do(self.fileupload_on_success)
         self.btUploadPhoto.onfailed.do(self.fileupload_on_failed)
+        bt_saveConfig = gui.Button('Save Config', width=200, height=30, margin='4px')
+        bt_saveConfig.onclick.do(self.on_saveConfig)
 
-        return([self.lbl, self.bt_pause, self.bt_load, self.nextLoad, delayCont,self.slider_brightness_lbl, self.slider_brightness, uploadCont])
+
+        return([self.lbl, self.bt_pause, self.bt_load, self.nextLoad, delayCont,self.slider_brightness_lbl, self.slider_brightness, uploadCont, bt_saveConfig])
+
+    def on_saveConfig(self, widget):
+        self.app.saveCfgAll()
 
     def on_brightness_changed(self, widget, value):
             self.app.setBrightness(int(value))
@@ -78,7 +84,7 @@ class Remote:
         self.app.delay = float(value)
 
     def showFile(self,fullpath, fileName):
-            if self.app.load(fullpath): #lazy !!!
+            if self.app.stageLoad(fullpath): #lazy !!!
                 fileName = fileName
                 self.fileName = fileName
                 self.app.loadedByPlugin = PLUGIN_NAME
@@ -137,7 +143,7 @@ def imageChangeBefore(app) -> None:
     # add image name
     if app.loadedByPlugin == PLUGIN_NAME and remote.fileName:
         text=f"{remote.fileName}"
-        app.image = drawText(text=text, size=app.cfg.FRAME.IMG_SIZE, fontSize=12, textColor=(192,192,192,192), align=(HAlign.RIGHT, VAlign.BOTTOM), bgImage=app.image, offset=(10,5))
+        app.image = drawText(text=text, size=app.frameSize, fontSize=12, textColor=(192,192,192,192), align=(HAlign.RIGHT, VAlign.BOTTOM), bgImage=app.image, offset=(10,5))
 
 
 @plugins.hookimpl
@@ -153,10 +159,12 @@ def loadCfg(app) -> None:
     Use app.loadCfg(PLUGIN_NAME, dict_with_config)
     """
     defaultConfig = {
-        "VARIABLE1" : "default_value1",
-        "VARIABLE2" : "default_value2",
+        "DELAY" : "60",
     }
     app.loadCfg(PLUGIN_NAME, defaultConfig) #load the real config and merge it with default values
+    if hasattr(app.cfg[PLUGIN_NAME], "DELAY") and app.cfg[PLUGIN_NAME].DELAY:
+        app.delay = float(app.cfg[PLUGIN_NAME].DELAY)
+    
 
 @plugins.hookimpl
 def do(app) -> None:
@@ -202,8 +210,17 @@ def setRemote(app):
     widgets : list[gui.Widget]= remote.setRemote()
     remote.delayTxtFB(app.delay)
     remote.setBrightnessFB(app.brightness)
+
     return widgets
 
 @plugins.hookimpl
 def loadAfter(app):
     """Called after successful load"""
+
+@plugins.hookimpl
+def saveCfg(app) -> None:
+    """called before startup
+    Placeholder for plugin settings to be stored.
+    Use app.saveCfg(PLUGIN_NAME, dict_with_config)
+    """
+    app.saveCfg(PLUGIN_NAME, {"DELAY":app.delay})

@@ -1,7 +1,6 @@
 import plugins
 import imgutils
 from slideshow import SlideShow
-import os.path as osp
 from PIL import Image
 import time
 import remi.gui as gui
@@ -11,7 +10,6 @@ PLUGIN_FANCY_NAME = "Clocks"
 PLUGIN_SORT_ORDER = 300
 PLUGIN_CLASS = "EFFECT"
 class Clocks:
-    currentImage : Image
     app : SlideShow
     shownTime : str = ""
     textColor : str = "#F5F5DC"
@@ -19,11 +17,12 @@ class Clocks:
     fontDesc : tuple[str, str] = None # current font name, current font path
 
     def getTime(self) -> str:
-        text : str = time.strftime('%H:%M' if self.app.cfg.CLOCKS.FORMAT == "24h" else '%l:%M')
+        text : str = time.strftime('%X')
         return text
     def showTime(self):
-        size = self.app.cfg.FRAME.IMG_SIZE
+        size = self.app.frameSize
         text : str = self.getTime()
+        text = ':'.join(text.split(':')[:-1])
         fontPath : str = None if not self.fontDesc else self.fontDesc[1]
         self.app.image = imgutils.drawText(text=text, size=size, fontSize=self.fontSize, textColor=self.textColor, align=(imgutils.HAlign.CENTER, imgutils.VAlign.CENTER), bgImage=self.app.image,fontPath=fontPath)
         self.shownTime = text
@@ -70,8 +69,9 @@ clocks = Clocks()
 
 @plugins.hookimpl
 def startup(app):
-    global clocks
     clocks.fontDesc = imgutils.getFontDescByName( app.cfg[PLUGIN_NAME].FONT)
+    clocks.textColor = app.cfg[PLUGIN_NAME].FILL
+    clocks.fontSize = app.cfg[PLUGIN_NAME].SIZE
     clocks.app = app
 
 @plugins.hookimpl
@@ -80,7 +80,6 @@ def exit(app):
 
 @plugins.hookimpl
 def imageChangeBefore(app : SlideShow) -> None:
-    clocks.currentImage=app.image
     clocks.showTime()
 
 @plugins.hookimpl
@@ -96,13 +95,24 @@ def loadCfg(app) -> None:
     Use app.loadCfg(PLUGIN_NAME, dict_with_config):
     """
     defaultConfig = {
-        "FORMAT" : "24h",
         "FILL" : "#F5F5DC",
-        "FONT" : None
+        "FONT" : None,
+        "SIZE" : 200
     }
     app.loadCfg(PLUGIN_NAME, defaultConfig)
+    
 
 @plugins.hookimpl
 def setRemote(app):
     """For setting web based remote from plugins. Returns list of remi.Widgets"""
     return clocks.setRemote()
+
+@plugins.hookimpl
+def saveCfg(app) -> None:
+    """called before startup
+    Placeholder for plugin settings to be stored.
+    Use app.saveCfg(PLUGIN_NAME, dict_with_config)
+    """
+    font = clocks.fontDesc[0] if clocks.fontDesc else None
+    app.saveCfg(PLUGIN_NAME, {"FILL": clocks.textColor, "FONT": font, "SIZE": clocks.fontSize})
+

@@ -27,7 +27,7 @@ class CountDown:
 
         seconds = self.getCounter()
         if seconds != None:
-            size = self.app.cfg.FRAME.IMG_SIZE
+            size = self.app.frameSize
             if seconds > 0:
                 text : str = str(seconds)
             else:
@@ -164,3 +164,11 @@ def setRemote(app):
     """For setting web based remote from plugins. Returns list of remi.Widgets"""
     return countDown.setRemote()
 
+@plugins.hookimpl
+def saveCfg(app) -> None:
+    """called before startup
+    Placeholder for plugin settings to be stored.
+    Use app.saveCfg(PLUGIN_NAME, dict_with_config)
+    """
+    font = countDown.fontDesc[0] if countDown.fontDesc else None
+    app.saveCfg(PLUGIN_NAME, {"FILL": countDown.textColor, "FONT": font, "SIZE": countDown.fontSize, "TIME": countDown.eventDt.strftime("%Y-%m-%d %H:%M:%S"), "NAME": countDown.name})

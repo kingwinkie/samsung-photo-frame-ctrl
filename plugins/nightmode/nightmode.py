@@ -9,6 +9,7 @@ class Nightmode:
     nightBrightness : int # Nightmode brightness from settings
     currentMode : MODE = None # current mode. May be set through TT or from remote
     lastCheckTT : int = 0 # day timestamp (s) of the last check
+    lastMode : MODE = None # last mode
     srcTable = []
     def setMode(self, mode : MODE):
         self.currentMode = mode
@@ -31,7 +32,7 @@ class Nightmode:
         """expects tuple in format ("13:57","DAY") or ("01:02 AM","NIGHT")"""
         t : time.struct_time = None
         #convert time to nr. of seconds from 00:00
-        securedt = ttStr[0]+" 1970/01/01"
+        securedt = ttStr[0]+" "+time.strftime("%Y/%m/%d")
         try: #first try 24h format
             t = time.strptime(securedt, "%H:%M %Y/%m/%d")
         except ValueError:

@@ -17,10 +17,10 @@ def startup(app) -> None:
     """called after application start
     Placeholder for plugin initialisation
     """
+    nightmode.app = app
+    app.nightmode = nightmode # for communication with ledstrip
     nightmode.srcTable = app.cfg[PLUGIN_NAME].TIMES
     nightmode.createTT(nightmode.srcTable)
-    nightmode.app = app
-    app.nightmode = nightmode # must stay here for communication with ledstrip
     nightmode.nightBrightness = app.cfg[PLUGIN_NAME].NIGHT_BRIGHTNESS
     nightmode.lastMode = Nightmode.MODE.DAY
 
@@ -51,3 +51,11 @@ def setRemote(app):
     """For setting web based remote from plugins. Returns list of remi.Widgets"""
     return nightmode.setRemote()
     
+@plugins.hookimpl
+def saveCfg(app) -> None:
+    """called before startup
+    Placeholder for plugin settings to be stored.
+    Use app.saveCfg(PLUGIN_NAME, dict_with_config)
+    """
+    app.saveCfg(PLUGIN_NAME, {"NIGHT_BRIGHTNESS": nightmode.nightBrightness,
+                              "TIMES": nightmode.srcTable})

@@ -1,6 +1,7 @@
-
+dynaconf_merge = true
 
 [FRAME]
+dynaconf_merge = true
 LOGLEVEL = "INFO"
 IMG_SIZE = [
     1024,
@@ -8,20 +9,18 @@ IMG_SIZE = [
 ]
 DELAY = 60
 
-[PLUGUNS]
+[PLUGINS]
+dynaconf_merge = false
 
 ACTIVE = [
     "LOADIMGURL",
-    "SAMSUNGFRAME",
+    "REMOTE"
 ]
 
-[SAMSUNGFRAME]
-MODEL = ""
 
 [LOADIMGURL]
 IMG_SOURCE_PATH = "https://random.imagecdn.app/1024/600"
 HTTP_DOWNLOAD_LIMIT = 10
-DELAY = 10
 
 [LOADIMGARTSY]
 HTTP_DOWNLOAD_LIMIT=5
@@ -29,3 +28,4 @@ HTTP_DOWNLOAD_LIMIT=5
 [REMOTE]
 ADDRESS="*"
 PORT=8088
+

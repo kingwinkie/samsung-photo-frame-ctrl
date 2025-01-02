@@ -15,7 +15,7 @@ def imageChangeBefore(app):
 
 @plugins.hookimpl
 def startup(app):
-    artsyImgLoader = ImgLoaderArtsy(app.cfg[PLUGIN_NAME].CLIENT_ID,app.cfg[PLUGIN_NAME].CLIENT_SECRET,app.cfg.FRAME.IMG_SIZE)
+    artsyImgLoader = ImgLoaderArtsy(app.cfg[PLUGIN_NAME].CLIENT_ID,app.cfg[PLUGIN_NAME].CLIENT_SECRET,app.frameSize)
     artsyImgLoader.downloadLimit = app.cfg[PLUGIN_NAME].HTTP_DOWNLOAD_LIMIT
     app.artsyImgLoader = artsyImgLoader
     return artsyImgLoader

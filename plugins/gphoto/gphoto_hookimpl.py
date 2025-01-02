@@ -31,7 +31,7 @@ def imageChangeBefore(app) -> None:
     Intended for effects etc. Image is in app.image
     """
     if app.loadedByPlugin == PLUGIN_NAME:
-        app.image = drawText(text=gpDownloader.description, size=app.cfg.FRAME.IMG_SIZE, fontSize=12, textColor=(192,192,192,192), align=(HAlign.RIGHT, VAlign.BOTTOM), bgImage=app.image, offset=(10,5))
+        app.image = drawText(text=gpDownloader.description, size=app.frameSize, fontSize=12, textColor=(192,192,192,192), align=(HAlign.RIGHT, VAlign.BOTTOM), bgImage=app.image, offset=(10,5))
 
 
 @plugins.hookimpl
