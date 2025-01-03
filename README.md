@@ -14,6 +14,7 @@ The main differences are:
 * Added simple gallery with download or local folder option
 * Added support for Neopixel Led strip as background ambient light
 * Implemented CLI
+* Added pluggy plugin system and developed few additional plugins
 
 Features
 --------
@@ -37,10 +38,10 @@ Features
     * From a local folder
     * From a generic URL
     * From Artsy.net (requires user account and credentials)
+    * From Google Photo (currently requires Google Cloud Account)
 
 * txt2img.py 
   * Converts text to image. Output can be piped to show-image.py
-
 
 
 Supported photo frames
@@ -57,25 +58,13 @@ Supported photo frames
 * SPF107H old
 * SPF700T
 
-Dependencies
-------------
-
-* pyusb
-* pillow
-* pycurl
-* certifi
-* argparse
-* netifaces
-* pluggy
-* pygame
-* dynaconf
 
 Installation
 ------------
 * clone the repository
 * create venv (python -m venv .venv)
 * install the main package (.venv/bin/pip install -e samsungframe)
-* check, add or modify settings.local.toml and .secrets.toml
+* create, check, add or modify settings.local.toml and .secrets.toml
 
 Usage
 -----
@@ -94,3 +83,5 @@ On Raspberry Pi Zero W
 * `git clone https://github.com/bero158/samsung-photo-frame-ctrl /home/pi/frame/samsung-photo-frame-ctrl`
 * try `/home/pi/frame/.venv/bin/python3 /home/pi/frame/samsung-photo-frame-ctrl/slideshow.py`
 * add `/home/pi/frame/.venv/bin/python3 /home/pi/frame/samsung-photo-frame-ctrl/slideshow.py &` to /etc/rc.local before 'exit 0' row
+
+In default settings there's a remote controller available through web at port 8088
