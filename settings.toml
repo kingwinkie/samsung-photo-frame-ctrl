@@ -11,10 +11,10 @@ DELAY = 60
 
 [PLUGINS]
 dynaconf_merge = false
-
 ACTIVE = [
     "LOADIMGURL",
-    "REMOTE"
+    "REMOTE",
+    "SAMSUNGFRAME" # For development change to "DUMMYFRAME" or override in settings.local.toml
 ]
 
 
@@ -26,6 +26,7 @@ HTTP_DOWNLOAD_LIMIT = 10
 HTTP_DOWNLOAD_LIMIT=5
 
 [REMOTE]
-ADDRESS="*"
+ADDRESS="*" # On Windows change to ADDRESS="localhost" or override in settings.local.toml
+#ADDRESS="localhost"
 PORT=8088
 

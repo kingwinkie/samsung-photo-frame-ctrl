@@ -241,7 +241,11 @@ class SlideShow:
         """
         filename=osp.join(self.cfg.root_path_for_dynaconf,"settings.local.toml")
         file :  tomlkit.toml_file.TOMLFile = tomlkit.toml_file.TOMLFile(filename)
-        doc : tomlkit.toml_document.TOMLDocument = file.read()
+        try:
+            doc : tomlkit.toml_document.TOMLDocument = file.read()
+        except FileNotFoundError:
+            doc = tomlkit.toml_document.TOMLDocument()
+        data = loaders.toml_loader.encode_nulls(data)
         doc.update(data)
         file.write(doc)
 

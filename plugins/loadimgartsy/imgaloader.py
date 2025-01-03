@@ -36,20 +36,15 @@ class ArtsyAPI:
         headers = {
             "X-Xapp-Token": self.token
         }
-        counter = 10
-        while not artworks and counter > 0:
-            counter -= 1
-            response = requests.get(self.nextURL, headers=headers)
-            response.raise_for_status()
-            jsonResponse = response.json()
-            artworks = jsonResponse["_embedded"]["artworks"]
-            self.nextURL = jsonResponse["_links"]["next"]["href"]
-            if artworks:
-                artworks = filter(lambda x: self.filterAR(x["dimensions"]["cm"]["width"],x["dimensions"]["cm"]["height"]), artworks)
-                artworks = list(artworks)
-            if not artworks:
-                time.sleep(1) # don't overload the server
-                LOGGER.info(f"Found zero images with AR > {self.minAR}. Retrying download {counter}")
+        response = requests.get(self.nextURL, headers=headers)
+        response.raise_for_status()
+        jsonResponse = response.json()
+        artworks = jsonResponse["_embedded"]["artworks"]
+        self.nextURL = jsonResponse["_links"]["next"]["href"]
+        if artworks:
+            artworks = filter(lambda x: self.filterAR(x["dimensions"]["cm"]["width"],x["dimensions"]["cm"]["height"]), artworks)
+            artworks = list(artworks)
+            LOGGER.info(f"Found zero images with AR > {self.minAR}.")
         return artworks
 
 class RandomImageDownloader:
@@ -59,10 +54,10 @@ class RandomImageDownloader:
 
     def getRandomArtwork(self) -> str:
         artworks = self.artsy_api.get_artworks()
-        random_artwork = random.choice(artworks)
-        return random_artwork
+        if artworks:
+            random_artwork = random.choice(artworks)
+            return random_artwork
         
-
 class ImgLoaderArtsy(ImgLoader):
     downloader : RandomImageDownloader
     
@@ -88,14 +83,15 @@ class ImgLoaderArtsy(ImgLoader):
         try:
             self.imageb = None
             self.lastDownloadAttempt = time.time()
-            self.artwork : dict = self.downloader.getRandomArtwork()
-            try:
-                url = self.artwork["_links"]["image"]["href"].replace("{image_version}","large")
-            except KeyError as e:
-                LOGGER.error(f"Arkwork URL key error {e}")
-                return None
-            self.imageb = self.loadImgCURL( url )
-                    
+            artwork : dict = self.downloader.getRandomArtwork()
+            if artwork:
+                self.artwork = artwork
+                try:
+                    url = self.artwork["_links"]["image"]["href"].replace("{image_version}","large")
+                except KeyError as e:
+                    LOGGER.error(f"Arkwork URL key error {e}")
+                    return None
+                self.imageb = self.loadImgCURL( url )
         except requests.exceptions.ConnectionError as connError:
             LOGGER.error(f"Image downloading error {connError}")
 

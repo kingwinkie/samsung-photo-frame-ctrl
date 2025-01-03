@@ -8,7 +8,7 @@ PLUGIN_FANCY_NAME = "Artsy.net Gallery"
 PLUGIN_CLASS = "LOADER"
 PLUGIN_SORT_ORDER = 200
 
-artsyImgLoader : ImgLoaderArtsy
+artsyImgLoader : ImgLoaderArtsy = None
 
 @plugins.hookimpl
 def imageChangeBefore(app):
@@ -44,7 +44,8 @@ def loadCfg(app) -> None:
 
 @plugins.hookimpl
 def do(app):
-    artsyImgLoader.do()
+    if artsyImgLoader:
+        artsyImgLoader.do()
         
 @plugins.hookimpl
 def load(app) -> bytes:

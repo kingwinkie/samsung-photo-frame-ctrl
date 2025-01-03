@@ -191,7 +191,10 @@ def startup(app) -> None:
     countDown.eventDt = parser.parse(cfg.TIME)
     countDown.textColor = cfg.FILL
     countDown.fontSize = cfg.SIZE
-    countDown.format = CountDown.Format[cfg.FORMAT]
+    if cfg.FORMAT:
+        countDown.format = CountDown.Format[cfg.FORMAT]
+    else:
+        countDown.format = CountDown.Format.SECONDS
     
 @plugins.hookimpl
 def loadCfg(app) -> None:
