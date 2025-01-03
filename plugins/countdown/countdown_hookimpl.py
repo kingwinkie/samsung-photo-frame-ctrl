@@ -59,7 +59,7 @@ class CountDown:
         seconds = self.getCounter()
         text : str = None
         num : int = seconds
-        if seconds:
+        if seconds != None:
             if seconds > 0:
                 if self.format == self.Format.DAYS_HOURS_MINUTES_SECONDS:
                     if seconds > 24*3600:
@@ -82,6 +82,7 @@ class CountDown:
         return text
 
     def show(self, text : str):
+        if text:    
             fontPath : str = None if not self.fontDesc else self.fontDesc[1]
             self.app.image = imgutils.drawText(text=text, size=self.app.frameSize, fontSize=self.fontSize, textColor=self.textColor, align=(imgutils.HAlign.CENTER, imgutils.VAlign.CENTER), bgImage=self.app.image,fontPath=fontPath)
             self.shownTime = text
