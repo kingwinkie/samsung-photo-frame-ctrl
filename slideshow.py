@@ -2,6 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import logging as LOGGER
+
+import tomlkit.toml_document
+import tomlkit.toml_file
 import imgutils as imgutils
 import time
 import plugins
@@ -16,6 +19,7 @@ from enum import IntEnum
 import threading
 import remi
 import random
+import tomlkit
 
 class SlideShow:
     class Stage(IntEnum):
@@ -230,13 +234,31 @@ class SlideShow:
             if self.stage != None:
                 self.setStage(self.stage.nextStage())
 
-    def saveCfg(self, pluginName : str, data):
-        dm = {"dynaconf_merge": False}
+    def updateToml(self, data : DynaBox):
+        """
+        Updates the toml file with new data. 
+        Original dynaconf.merge() can't be used here because it clears dynaconf_merge flag
+        """
+        filename=osp.join(self.cfg.root_path_for_dynaconf,"settings.local.toml")
+        file :  tomlkit.toml_file.TOMLFile = tomlkit.toml_file.TOMLFile(filename)
+        doc : tomlkit.toml_document.TOMLDocument = file.read()
+        doc.update(data)
+        file.write(doc)
+
+    def saveCfg(self, pluginName : str, data, merge = False):
+        """
+        Called from plugins. Saves the config to the toml file
+        """
+        
+        dm = {"dynaconf_merge": merge}
         data.update(dm)
         dbox = DynaBox({pluginName : data})
-        loaders.write(filename=osp.join(self.cfg.root_path_for_dynaconf,"settings.local.toml"), data=dbox, merge=True)
+        self.updateToml(dbox)
 
     def loadCfg(self, section : str, data : dict):
+        """
+        Called from plugins. Loads the config
+        """
         setattr(self.cfg,section, self.cfg.get(section,data))
         # Workaround for dynaconf merge issue
         for key in data.keys():
@@ -244,6 +266,9 @@ class SlideShow:
                 self.cfg[section][key] = data[key]
 
     def saveCfgAll(self):
+        """
+        Saves all active plugin configs
+        """
         self.pm.hook.saveCfg(app=self) #save current plugins config.
         
     def run(self, cfg : Dynaconf ):

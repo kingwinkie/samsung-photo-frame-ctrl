@@ -12,12 +12,13 @@ class MyImgELoader(ImgLoaderE621):
     ti_tags : list[gui.TextInput]
     tagRows : list[gui.Container] # list of tag text inputs
     tagsContainer : gui.Container
+    api : py621Types.EAPI
     def setRemote(self):
         """For setting web based remote from plugins. Returns list of remi.Widgets"""
         apis = list(map(lambda x: str(x)[5:],py621Types.EAPI))
         lbl_api = gui.Label("API:",style={'text-align':'Left'})
         dd_api = gui.DropDown.new_from_list(apis,width=200, height=20, margin='4px')
-        dd_api.set_value(self.app.cfg[PLUGIN_NAME].API)
+        dd_api.set_value(self.api)
         dd_api.onchange.do(self.on_dd_api_change)
         
         lbl_tags = gui.Label("tags:",style={'text-align':'Left'})
@@ -60,6 +61,7 @@ class MyImgELoader(ImgLoaderE621):
 
     def on_ti_tag_change(self, widget, value):
             self.rebuildTags()
+            self.pages = self.app.cfg[PLUGIN_NAME].PAGES #has to be re-read from config
             self.reload()
 
     def rebuildTags(self):
@@ -92,6 +94,7 @@ def startup(app):
     pluginImgLoaderE.api = app.cfg[PLUGIN_NAME].API
     pluginImgLoaderE.tags = app.cfg[PLUGIN_NAME].TAGS
     pluginImgLoaderE.downloadLimit = app.cfg[PLUGIN_NAME].HTTP_DOWNLOAD_LIMIT
+    pluginImgLoaderE.api = app.cfg[PLUGIN_NAME].API
     pluginImgLoaderE.prepare()
     return None
 
@@ -126,3 +129,14 @@ def setRemote(app):
 def load(app) -> bytes:
     """Get image data. For loaders."""
     return pluginImgLoaderE.load()
+
+@plugins.hookimpl
+def saveCfg(app) -> None:
+    """called before startup
+    Placeholder for plugin settings to be stored.
+    Use app.saveCfg(PLUGIN_NAME, dict_with_config)
+    """
+    app.saveCfg(PLUGIN_NAME, 
+        {"API": pluginImgLoaderE.api,
+            "TAGS": pluginImgLoaderE.tags, 
+        }) 

@@ -11,9 +11,7 @@ class ArtsyAPI:
         self.token = self.get_token()
         self.nextURL = "https://api.artsy.net/api/artworks"
         self.artwork : dict = None
-        self.description : str = None #Current art description
-        
-    
+        self.minAR : float = 0 #Minimum aspect ratio for images to download
 
     def get_token(self):
         url = "https://api.artsy.net/api/tokens/xapp_token"
@@ -25,16 +23,33 @@ class ArtsyAPI:
         response.raise_for_status()
         return response.json()["token"]
 
+    def filterAR(self, width : int, height : int):
+        if self.minAR:
+            try:
+                return width/height > self.minAR
+            except:
+                return False
+        return True #AR 0 = always valid
+    
     def get_artworks(self):
-        
+        artworks = None
         headers = {
             "X-Xapp-Token": self.token
         }
-        response = requests.get(self.nextURL, headers=headers)
-        response.raise_for_status()
-        jsonResponse = response.json()
-        artworks = jsonResponse["_embedded"]["artworks"]
-        self.nextURL = jsonResponse["_links"]["next"]["href"]
+        counter = 10
+        while not artworks and counter > 0:
+            counter -= 1
+            response = requests.get(self.nextURL, headers=headers)
+            response.raise_for_status()
+            jsonResponse = response.json()
+            artworks = jsonResponse["_embedded"]["artworks"]
+            self.nextURL = jsonResponse["_links"]["next"]["href"]
+            if artworks:
+                artworks = filter(lambda x: self.filterAR(x["dimensions"]["cm"]["width"],x["dimensions"]["cm"]["height"]), artworks)
+                artworks = list(artworks)
+            if not artworks:
+                time.sleep(1) # don't overload the server
+                LOGGER.info(f"Found zero images with AR > {self.minAR}. Retrying download {counter}")
         return artworks
 
 class RandomImageDownloader:
@@ -52,11 +67,20 @@ class ImgLoaderArtsy(ImgLoader):
     downloader : RandomImageDownloader
     
     def __init__(self, client_id : str, client_secret : str, size : tuple[int,int]):
-        artsyAPI = ArtsyAPI(client_id=client_id, client_secret=client_secret)
-        self.downloader = RandomImageDownloader(artsyAPI, size)
+        self.artsyAPI = ArtsyAPI(client_id=client_id, client_secret=client_secret)
+        self.downloader = RandomImageDownloader(self.artsyAPI, size)
         self.size = size
+        self.description : str = None #Current art description
         self.prepare()
-
+    
+    @property
+    def minAR(self):
+        return self.artsyAPI.minAR
+    
+    @minAR.setter
+    def minAR(self,value):
+        self.artsyAPI.minAR = value
+    
     def prepare(self):
         """
         Informs loader that a new image will be requested (for slow downloads) 

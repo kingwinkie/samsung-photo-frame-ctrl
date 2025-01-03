@@ -11,3 +11,4 @@ dynaconf
 remi
 qrcode
 netifaces
+tomlkit

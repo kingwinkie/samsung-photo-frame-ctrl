@@ -9,7 +9,7 @@ PLUGIN_SORT_ORDER = 230
 class MyImgURLLoader(ImgLoaderURL):
     def setRemote(self):
         lbl_url = gui.Label(f"URL:",style={'text-align':'Left'})
-        tx_url = gui.TextInput(height=200, margin='4px',single_line=False, hint = "Insert URL of the gicture(s) here")
+        tx_url = gui.TextInput(height=200, margin='4px',single_line=True, hint = "Insert URL of the gicture(s) here")
         tx_url.set_value(self.url)
         tx_url.onchange.do(self.on_url_changed)
         return [lbl_url, tx_url]

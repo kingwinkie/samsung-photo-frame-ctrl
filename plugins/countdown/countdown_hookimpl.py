@@ -2,7 +2,8 @@ import plugins
 from  slideshow import SlideShow
 import imgutils
 import remi.gui as gui
-import locale
+from enum import Enum
+import math
 PLUGIN_NAME = "COUNTDOWN" # set plugin name here. This must be the same as prefix of this file.
 PLUGIN_FANCY_NAME = "Count Down" # set fancy name for remote controller here
 PLUGIN_CLASS = "EFFECT" # Classes are: LOADER (force load after change), DISPLAY (at least one must stay active), REMOTE(can't be unloaded from web)
@@ -16,6 +17,36 @@ class CountDown:
     textColor : str = "#F5F5DC"
     fontSize : int = 200
     fontDesc : tuple[str, str] = None # current font name, current font path
+    lastText : str = None # last text shown
+    class Format(Enum):
+        SECONDS = "SECONDS"
+        DAYS_SECONDS = "DAYS_SECONDS"
+        DAYS_HOURS_SECONDS = "DAYS_HOURS_SECONDS"
+        DAYS_HOURS_MINUTES_SECONDS = "DAYS_HOURS_MINUTES_SECONDS"
+        @classmethod
+        def getName(cls, value):
+            if value == cls.SECONDS:
+                return "Seconds"
+            elif value == cls.DAYS_SECONDS:
+                return "Days, Seconds"
+            elif value == cls.DAYS_HOURS_SECONDS:
+                return "Days, Hours, Seconds"
+            elif value == cls.DAYS_HOURS_MINUTES_SECONDS:
+                return "Days, Hours, Minutes, Seconds"
+            else:
+                return "Unknown"
+        @classmethod
+        def setByName(cls, name):
+            if name == "Seconds":
+                return cls.SECONDS
+            elif name == "Days, Seconds":
+                return cls.DAYS_SECONDS
+            elif name == "Days, Hours, Seconds":
+                return cls.DAYS_HOURS_SECONDS
+            elif name == "Days, Hours, Minutes, Seconds":
+                return cls.DAYS_HOURS_MINUTES_SECONDS
+            
+    format : Format = Format.SECONDS
 
     def getCounter(self) -> timedelta:
         if self.eventDt: 
@@ -23,18 +54,36 @@ class CountDown:
             delta = self.eventDt - now
             return delta.seconds+delta.days*24*3600
         
-    def show(self):
 
+    def getText(self):
         seconds = self.getCounter()
-        if seconds != None:
-            size = self.app.frameSize
+        text : str = None
+        num : int = seconds
+        if seconds:
             if seconds > 0:
-                text : str = str(seconds)
+                if self.format == self.Format.DAYS_HOURS_MINUTES_SECONDS:
+                    if seconds > 24*3600:
+                        num = seconds / (24*3600)
+                    elif seconds > 3600:
+                        num = seconds / (3600)
+                    elif seconds > 60:
+                        num = seconds / 60
+                elif self.format == self.Format.DAYS_HOURS_SECONDS:
+                    if seconds > 24*3600:
+                        num = seconds / (24*3600)
+                    elif seconds > 3600:
+                        num = seconds / (3600)
+                elif self.format == self.Format.DAYS_SECONDS:
+                    if seconds > 24*3600:
+                        num = seconds / (24*3600)
+                text = str(math.floor(num))
             else:
                 text = self.name if self.name else "End"
+        return text
 
+    def show(self, text : str):
             fontPath : str = None if not self.fontDesc else self.fontDesc[1]
-            self.app.image = imgutils.drawText(text=text, size=size, fontSize=self.fontSize, textColor=self.textColor, align=(imgutils.HAlign.CENTER, imgutils.VAlign.CENTER), bgImage=self.app.image,fontPath=fontPath)
+            self.app.image = imgutils.drawText(text=text, size=self.app.frameSize, fontSize=self.fontSize, textColor=self.textColor, align=(imgutils.HAlign.CENTER, imgutils.VAlign.CENTER), bgImage=self.app.image,fontPath=fontPath)
             self.shownTime = text
 
     def setRemote(self):
@@ -70,8 +119,18 @@ class CountDown:
         # setting the listener for the onclick event of the button
         self.remote_colorPicker.onchange.do(self.on_remote_colorPicker_changed)
         self.remote_fontSize.onchange.do(self.on_remote_fontSize_changed)
-        return [lblName,self.evName, evCont, sizeCont, self.lblSize, self.remote_fontSize, fontCont]
+
+        formatCont = gui.HBox()
+        formats = list(map(lambda x: self.Format.getName(x),self.Format))
+        lbl_format  = gui.Label("API:",style={'text-align':'Left'})
+        dd_format = gui.DropDown.new_from_list(formats,width=200, height=20, margin='4px')
+        dd_format.set_value(self.format.getName(self.format))
+        dd_format.onchange.do(self.on_dd_format_change)
+        formatCont.append([lbl_format, dd_format])
+        return [lblName,self.evName, evCont, sizeCont, self.lblSize, self.remote_fontSize, fontCont,formatCont]
     
+    def on_dd_format_change(self, widget, value):
+        self.format = self.Format.setByName(value)
     
     def on_ev_name_change(self, widget, value):
         self.name = value
@@ -115,9 +174,8 @@ def imageChangeBefore(app) -> None:
     Intended for effects etc. Image is in app.image
     """
     if countDown:
-        countDown.show()
+        countDown.show(countDown.getText())
     
-
 @plugins.hookimpl
 def startup(app) -> None:
     """called after application start
@@ -126,11 +184,13 @@ def startup(app) -> None:
     global countDown
     countDown = CountDown()
     countDown.app = app
-    countDown.fontDesc = imgutils.getFontDescByName( app.cfg[PLUGIN_NAME].FONT)
-    countDown.name = app.cfg[PLUGIN_NAME].NAME
-    countDown.eventDt = parser.parse(app.cfg[PLUGIN_NAME].TIME)
-    countDown.textColor = app.cfg[PLUGIN_NAME].FILL
-    countDown.fontSize = app.cfg[PLUGIN_NAME].FONTSIZE
+    cfg = app.cfg[PLUGIN_NAME]
+    countDown.fontDesc = imgutils.getFontDescByName( cfg.FONT)
+    countDown.name = cfg.NAME
+    countDown.eventDt = parser.parse(cfg.TIME)
+    countDown.textColor = cfg.FILL
+    countDown.fontSize = cfg.SIZE
+    countDown.format = CountDown.Format[cfg.FORMAT]
     
 @plugins.hookimpl
 def loadCfg(app) -> None:
@@ -143,9 +203,10 @@ def loadCfg(app) -> None:
         "FORMAT" : "24h",
         "FILL" : "#F5F5DC",
         "FONT" : None,
-        "FONTSIZE" : 200,
+        "SIZE" : 200,
         "TIME" : (datetime.today() + timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S"),
-        "NAME" : "End"
+        "NAME" : "End",
+        "FORMAT" : CountDown.Format.SECONDS
     }
     app.loadCfg(PLUGIN_NAME, defaultConfig) #load the real config and merge it with default values
 
@@ -154,10 +215,10 @@ def do(app) -> None:
     """called every second when frame is waiting to next frame.
     Intended for showing real time etc.
     """
-    # Must be shown every second
-    app.setStage(app.Stage.RESIZE)
-
-
+    newText = countDown.getText()
+    if  newText != countDown.lastText:
+        app.setStage(app.Stage.RESIZE) # force repaint
+        countDown.lastText = newText
 
 @plugins.hookimpl
 def setRemote(app):
@@ -171,4 +232,11 @@ def saveCfg(app) -> None:
     Use app.saveCfg(PLUGIN_NAME, dict_with_config)
     """
     font = countDown.fontDesc[0] if countDown.fontDesc else None
-    app.saveCfg(PLUGIN_NAME, {"FILL": countDown.textColor, "FONT": font, "SIZE": countDown.fontSize, "TIME": countDown.eventDt.strftime("%Y-%m-%d %H:%M:%S"), "NAME": countDown.name})
+    app.saveCfg(PLUGIN_NAME, 
+        {"FILL": countDown.textColor,
+            "FONT": font, 
+            "SIZE": countDown.fontSize, 
+            "TIME": countDown.eventDt.strftime("%Y-%m-%d %H:%M:%S"), 
+            "NAME": countDown.name,
+            "FORMAT": countDown.format.name
+        }) 
