@@ -12,3 +12,5 @@ remi
 qrcode
 netifaces
 tomlkit
+dateutils
+-r plugins/gphoto/requirements.txt

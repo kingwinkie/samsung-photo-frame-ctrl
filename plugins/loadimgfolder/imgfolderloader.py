@@ -2,6 +2,7 @@ import random
 import logging as LOGGER
 import os
 from loadimg import ImgLoader
+import imgutils
 
 class Randomizer:
     def __init__(self):
@@ -48,7 +49,7 @@ class LoaderFile(): # takes random file from a folder
         
     def loadFile(self, imgPath) :
         if imgPath:
-            ...
+            return imgutils.loadFile(imgPath)
             # not done yet
             #picture
     

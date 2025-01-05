@@ -158,6 +158,14 @@ class SlideShow:
                 return True #must returns True if success because of plugins
         #show last downloaded image. At least show something
         self.image = self.loadedImage
+
+        if not self.image:
+            try:
+                #data = imgutils.loadFile(osp.join(osp.realpath(osp.dirname(__file__)),"res","monoscope.png"))
+                self.image = imgutils.bytes2img(osp.join(osp.realpath(osp.dirname(__file__)),"res","monoscope.png"))
+            except:
+                self.image = Image.new('RGBA', self.cfg.FRAME.IMG_SIZE, (0, 0, 0, 0)) #black screen when nothing has been loaded and there's no image at all
+            self.loadedImage = self.image
         return True
 
     def stageResize(self):
@@ -181,7 +189,7 @@ class SlideShow:
     
     def stageIdle(self):
         """Calls do() in plugins"""
-        wait = 1 # wait 1s
+        wait = 0.9 # wait 0.9s
         while (self.idleIter < self.delay or self.paused) and self.stage == self.Stage.IDLE:
             if not self.paused:
                 self.idleIter += wait
@@ -241,7 +249,10 @@ class SlideShow:
         """
         filename=osp.join(self.cfg.root_path_for_dynaconf,"settings.local.toml")
         file :  tomlkit.toml_file.TOMLFile = tomlkit.toml_file.TOMLFile(filename)
-        doc : tomlkit.toml_document.TOMLDocument = file.read()
+        try:
+            doc : tomlkit.toml_document.TOMLDocument = file.read()
+        except FileNotFoundError:
+            doc = tomlkit.toml_document.TOMLDocument()
         doc.update(data)
         file.write(doc)
 

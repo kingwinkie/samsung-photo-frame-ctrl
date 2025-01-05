@@ -14,6 +14,9 @@ class Dimension(IntEnum):
     HEIGHT = 1
 
 def ar(size : tuple[int, int]) -> float:
+    """
+    calculates aspect ratio of the image
+    """
     return size[Dimension.WIDTH]/size[Dimension.HEIGHT]
 
 def imgSizeCalc(imgSize : tuple[int, int], frameSize : tuple[int, int], rMode : RMode) -> tuple[int, int]:
@@ -57,6 +60,13 @@ def resize_and_centerImg(img : Image.Image, frameSize : tuple[int,int], backcolo
     # Resize the image with the new dimensions while maintaining aspect ratio
     return pasteImageFrame(img, size, pos, frameSize, backcolor)
    
+def loadFile(path : str) -> bytes:
+    """reads file to bytes buffer"""
+    data : bytes = None
+    with open(path, "rb") as f:
+        data = f.read() # if you only wanted to read 512 bytes, do .read(512)
+    return data
+
 def bytes2img(file) -> Image.Image:
     """file is filename or bytes or readbuffer (Python 3.9 on Pi can't process '|')"""
     try:
@@ -121,21 +131,39 @@ def createFont(fontSize : int, fontPath : str = None) -> ImageFont:
     LOGGER.debug(f"Font: {font.getname()} size:{font.size}")
     return font
 
-def drawText(text : str, size : tuple[int,int], fontSize : int, textColor, align : tuple[HAlign, VAlign], bgImage : Image, offset : tuple[int,int]=(0,0), fontPath : str = None):
-        image = Image.new('RGBA', size , (0,0,0,0))
+def getTextSize(text : str, font : ImageFont, draw : ImageDraw = None) -> tuple[int,int]:
+    """
+    Returns size of text bounding box.
+    """
+    if not draw:
+        image = Image.new('RGB', (1024, 800), (0, 0, 0))
         # Initialize the drawing context
         draw = ImageDraw.Draw(image)
-        font = createFont( fontSize=fontSize, fontPath=fontPath)
-        textBox = draw.textbbox((0, 0), text, font=font)
-        textSize : tuple[int, int] = textBox[2] - textBox[Dimension.WIDTH], textBox[3] #- textBox[Dimension.HEIGHT]
-        
-        textPos : tuple[int, int] = calcAlign(align, size, textSize, offset)
-        # Add text to image
-        draw.text(xy=textPos,text=text,fill=textColor, font=font)
-        return pasteImage(bgImage, image)
+    textBox = draw.textbbox((0, 0), text, font=font)
+    textSize : tuple[int, int] = textBox[2] - textBox[Dimension.WIDTH], textBox[3] #- textBox[Dimension.HEIGHT]
+    return textSize
+
+def drawText(text : str, size : tuple[int,int], fontSize : int, textColor, align : tuple[HAlign, VAlign], bgImage : Image, offset : tuple[int,int]=(0,0), fontPath : str = None, textSize : tuple[int,int] = None):
+    """
+    Places text to the already existing image.
+    textSize forces size of the text for placing regardless to the current text size. For moving counter not too quickly.
+    """    
+    image = Image.new('RGBA', size, (0, 0, 0, 0))
+    # Initialize the drawing context
+    draw = ImageDraw.Draw(image)
+    font = createFont( fontSize=fontSize, fontPath=fontPath)
+    if not textSize:
+        textSize = getTextSize(text, font, draw)
+    
+    textPos : tuple[int, int] = calcAlign(align, size, textSize, offset)
+    # Add text to image
+    draw.text(xy=textPos,text=text,fill=textColor, font=font)
+    return pasteImage(bgImage, image)
         
 def getAvailableFonts(fontPath : str = None) -> list[str]:
-    """Returns list of fontPaths found in fontPath or in ./font """
+    """
+    Returns list of fontPaths found in fontPath or in ./font 
+    """
     fontPaths : list[str] = []
     realPath = osp.realpath(osp.dirname(__file__))
     search = osp.join(realPath, "res","fonts","*.ttf")

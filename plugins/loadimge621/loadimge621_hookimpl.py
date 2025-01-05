@@ -22,7 +22,7 @@ class MyImgELoader(ImgLoaderE621):
         dd_api.onchange.do(self.on_dd_api_change)
         
         lbl_tags = gui.Label("tags:",style={'text-align':'Left'})
-        self.ti_tags = []
+        self.cont_tags = []
         self.tagRows = []
         for row, tag in enumerate(self.tags):
             tagRow = self.addTiTag(tag, row)
@@ -41,11 +41,12 @@ class MyImgELoader(ImgLoaderE621):
         ti_tag.row = row
         ti_tag.set_value(tag)
         ti_tag.onchange.do(self.on_ti_tag_change)
-        self.ti_tags.append(ti_tag)
+        self.cont_tags.append(rowContainer)
         btX = gui.Button(text = "X", width=20, height=20, margin='4px', style={'float': 'left'})
         btX.row = row
         btX.onclick.do(self.on_btX_clicked)
         rowContainer.append([ti_tag, btX])
+        rowContainer.ti_tag = ti_tag
         btX.rowContainer = rowContainer
         return rowContainer
 
@@ -56,6 +57,7 @@ class MyImgELoader(ImgLoaderE621):
     def on_btX_clicked(self, widget):
         rowContainer : gui.Container = widget.rowContainer
         self.tagsContainer.remove_child(rowContainer)
+        self.cont_tags.remove(rowContainer)
         self.rebuildTags()
         self.reload()
 
@@ -67,8 +69,8 @@ class MyImgELoader(ImgLoaderE621):
     def rebuildTags(self):
         """re-creates internal array of tags"""
         self.tags.clear()
-        for ti_tag in self.ti_tags:
-            self.tags.append(ti_tag.get_value())
+        for cont_tag in self.cont_tags:
+            self.tags.append(cont_tag.ti_tag.get_value())
 
     def on_bt_add_pressed(self, widget):
         self.tags.append("")

@@ -1,7 +1,6 @@
 import plugins
 import imgutils
 from slideshow import SlideShow
-from PIL import Image
 import time
 import remi.gui as gui
 
@@ -10,21 +9,23 @@ PLUGIN_FANCY_NAME = "Clocks"
 PLUGIN_SORT_ORDER = 300
 PLUGIN_CLASS = "EFFECT"
 class Clocks:
-    app : SlideShow
+    app : SlideShow = None
     shownTime : str = ""
     textColor : str = "#F5F5DC"
     fontSize : int = 200
     fontDesc : tuple[str, str] = None # current font name, current font path
+    align : tuple[imgutils.HAlign, imgutils.VAlign]
 
     def getTime(self) -> str:
         text : str = time.strftime('%X')
         return text
     def showTime(self):
+        if not self.app: return
         size = self.app.frameSize
         text : str = self.getTime()
         text = ':'.join(text.split(':')[:-1])
         fontPath : str = None if not self.fontDesc else self.fontDesc[1]
-        self.app.image = imgutils.drawText(text=text, size=size, fontSize=self.fontSize, textColor=self.textColor, align=(imgutils.HAlign.CENTER, imgutils.VAlign.CENTER), bgImage=self.app.image,fontPath=fontPath)
+        self.app.image = imgutils.drawText(text=text, size=size, fontSize=self.fontSize, textColor=self.textColor, align=self.align, bgImage=self.app.image,fontPath=fontPath)
         self.shownTime = text
     # remote UI
     def setRemote(self):
@@ -46,8 +47,29 @@ class Clocks:
         # setting the listener for the onclick event of the button
         self.remote_colorPicker.onchange.do(self.on_remote_colorPicker_changed)
         self.remote_fontSize.onchange.do(self.on_remote_fontSize_changed)
-        return [sizeCont, self.lblSize, self.remote_fontSize, fontCont]
+
+        # align
+        alignCont = gui.HBox()
+        lblHAlign = gui.Label('HAlign:', style={'text-align':'Left', 'margin-right':'10px'})
+        ddHAlign = gui.DropDown.new_from_list([e.name for e in imgutils.HAlign],width=80, height=20, margin='4px',style={'margin-right':'10px'})
+        ddHAlign.set_value(self.align[0].name)
+        ddHAlign.onchange.do(self.on_dd_halign_change)
+        lblVAlign = gui.Label('VAlign:', style={'text-align':'Left', 'margin-right':'10px'})
+        ddVAlign = gui.DropDown.new_from_list([e.name for e in imgutils.VAlign],width=80, height=20, margin='4px')
+        ddVAlign.set_value(self.align[1].name)
+        ddVAlign.onchange.do(self.on_dd_valign_change)
+        alignCont.append([lblHAlign,ddHAlign,lblVAlign,ddVAlign])
+      
+        return [sizeCont, self.lblSize, self.remote_fontSize, fontCont, alignCont]
     
+    def on_dd_halign_change(self, widget, value):
+        self.align = (imgutils.HAlign[value], self.align[1])
+        self.app.setStage(self.app.Stage.RESIZE)
+
+    def on_dd_valign_change(self, widget, value):
+        self.align = (self.align[0], imgutils.VAlign[value])
+        self.app.setStage(self.app.Stage.RESIZE)
+
     def on_dd_font_change(self, widget, value):
         self.fontDesc = imgutils.getFontDescByName(value)
         self.app.setStage(self.app.Stage.RESIZE)
@@ -69,9 +91,11 @@ clocks = Clocks()
 
 @plugins.hookimpl
 def startup(app):
-    clocks.fontDesc = imgutils.getFontDescByName( app.cfg[PLUGIN_NAME].FONT)
-    clocks.textColor = app.cfg[PLUGIN_NAME].FILL
-    clocks.fontSize = app.cfg[PLUGIN_NAME].SIZE
+    cfg = app.cfg[PLUGIN_NAME]
+    clocks.fontDesc = imgutils.getFontDescByName( cfg.FONT)
+    clocks.textColor = cfg.FILL
+    clocks.fontSize = cfg.SIZE
+    clocks.align = (imgutils.HAlign[cfg.HALIGN], imgutils.VAlign[cfg.VALIGN])
     clocks.app = app
 
 @plugins.hookimpl
@@ -97,7 +121,9 @@ def loadCfg(app) -> None:
     defaultConfig = {
         "FILL" : "#F5F5DC",
         "FONT" : None,
-        "SIZE" : 200
+        "SIZE" : 200,
+        "HALIGN" : "CENTER",
+        "VALIGN" : "CENTER"
     }
     app.loadCfg(PLUGIN_NAME, defaultConfig)
     
@@ -114,5 +140,11 @@ def saveCfg(app) -> None:
     Use app.saveCfg(PLUGIN_NAME, dict_with_config)
     """
     font = clocks.fontDesc[0] if clocks.fontDesc else None
-    app.saveCfg(PLUGIN_NAME, {"FILL": clocks.textColor, "FONT": font, "SIZE": clocks.fontSize})
+    app.saveCfg(PLUGIN_NAME, {
+        "FILL": clocks.textColor, 
+        "FONT": font, 
+        "SIZE": clocks.fontSize,
+        "HALIGN": clocks.align[0].name,
+        "VALIGN": clocks.align[1].name
+            })
 
