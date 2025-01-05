@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import logging as LOGGER
-
 import tomlkit.toml_document
 import tomlkit.toml_file
 import imgutils as imgutils
@@ -11,8 +10,9 @@ import plugins
 import slideshow_hookimpl
 import pluginmanager_hookimpl
 from os import path as osp
+import os, sys
 from PIL import Image
-from dynaconf import Dynaconf,loaders
+from dynaconf import Dynaconf
 from dynaconf.utils.boxing import DynaBox
 import plugins.hookspecs as hookspecs
 from enum import IntEnum
@@ -48,11 +48,15 @@ class SlideShow:
     stage : Stage = Stage.LOAD # Current stage. Stages are : 0 = load, 1 = resize, 2 = show, 3 = idle
     cond : threading.Condition #notifycation for idle sleep 
     frameSize : tuple[int,int] = (1024,800) # Frame size
+    shuthown : bool = False # System should be shut down after the app quits
+    reboot : bool = False # System should be rebooted after the app quits
     @property
     def brightness(self):
         return 255-self.brightnessMask[3]
-    def quitApp(self, quit = True):
+    def quitApp(self, quit = True, shutdown = False, reboot = False):
         self.quit = quit
+        self.shutdown = shutdown
+        self.reboot = reboot
 
     def __init__(self):
         self.cond = threading.Condition()
@@ -282,7 +286,7 @@ class SlideShow:
         """
         self.pm.hook.saveCfg(app=self) #save current plugins config.
         
-    def run(self, cfg : Dynaconf ):
+    def run(self, cfg : Dynaconf ) -> int:
         self.cfg = cfg
         self.frameSize = self.cfg.FRAME.IMG_SIZE
         self.get_plugin_manager()
@@ -293,16 +297,23 @@ class SlideShow:
         except KeyboardInterrupt:
             LOGGER.info("Interrupted")
         self.pm.hook.exit(app=self)
+        if self.reboot:
+            LOGGER.info("System Reboot")
+            os.system('sudo shutdown -r now')
+        if self.shutdown:
+            LOGGER.info("System Shutdown")
+            os.system('sudo shutdown -h now')
+        return os.EX_OK
         
 slideShow : SlideShow = None
 if __name__ == '__main__':
     settings = Dynaconf(
         envvar_prefix="FRAME",
         root_path=osp.realpath(osp.dirname(__file__)),
-        settings_files=['settings.toml','.secrets.toml'],
-
+        settings_files=['settings.toml','.secrets.toml']
         )
     loglevel = settings.FRAME.LOGLEVEL if hasattr(settings,"FRAME") and hasattr(settings.FRAME, "LOGLEVEL") else "INFO"
     LOGGER.basicConfig(level=loglevel, format="%(asctime)s %(levelname)s:%(name)s:%(message)s")
     slideShow = SlideShow()
-    slideShow.run(settings)
+    ex = slideShow.run(settings)
+    sys.exit(ex) 
