@@ -50,6 +50,7 @@ class SlideShow:
     frameSize : tuple[int,int] = (1024,800) # Frame size
     shuthown : bool = False # System should be shut down after the app quits
     reboot : bool = False # System should be rebooted after the app quits
+    activeLoadersCount : int = 0 # count of loader plugins. Set in stageLoad. Used for determining if idleIter should be incremented
     @property
     def brightness(self):
         return 255-self.brightnessMask[3]
@@ -140,8 +141,9 @@ class SlideShow:
         """loads a new image. Buffer is here to force a specific image from plugins"""
         self.idleIter = 0
         self.loadedByPlugin = None
+        hookImpls = self.pm.hook.load.get_hookimpls()
+        self.activeLoadersCount = len(hookImpls)
         if not buffer:
-            hookImpls = self.pm.hook.load.get_hookimpls()
             buffers = []
             for hookImpl in hookImpls:
                 buffers.append((hookImpl.plugin,hookImpl.function(app=self))) #call plugins
@@ -193,16 +195,18 @@ class SlideShow:
     
     def stageIdle(self):
         """Calls do() in plugins"""
-        wait = 0.9 # wait 0.9s
+        wait = 1 # wait 1s
         while (self.idleIter < self.delay or self.paused) and self.stage == self.Stage.IDLE:
-            if not self.paused:
+            if not self.paused and self.activeLoadersCount:
                 self.idleIter += wait
             start = time.time()
-            self.pm.hook.do(app=self) #call plugins
-            delta = time.time() - start #measure time lost in plugins
+            self.pm.hook.do(app=self) # call plugins
+            delta = time.time() - start # measure time lose in plugins
             waitD = wait - delta
             if self.quit: return
-            if self.forceLoad: return
+            if self.forceLoad: 
+                self.idleIter = self.delay # force end of the cycle
+                return
             if waitD > 0:
                 with self.cond:
                     self.cond.wait(waitD)

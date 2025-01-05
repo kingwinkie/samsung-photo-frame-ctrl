@@ -31,7 +31,11 @@ class MyImgELoader(ImgLoaderE621):
         self.tagsContainer.append(self.tagRows)
         bt_tag_add = gui.Button('Add', width=100, height=20,  margin='4px')
         bt_tag_add.onclick.do(self.on_bt_add_pressed)
-        return [lbl_api, dd_api, lbl_tags, self.tagsContainer, bt_tag_add]
+        
+        self.linkContainer = gui.VBox() # container with image link(s)
+        self.lnImg = None # don't show empty link
+        
+        return [lbl_api, dd_api, lbl_tags, self.tagsContainer, bt_tag_add, self.linkContainer]
     
     def addTiTag(self, tag : str, row : int) -> gui.Container:
         #ti_tag = gui.TextInput(width=200, height=20, margin='10px')
@@ -130,7 +134,17 @@ def setRemote(app):
 @plugins.hookimpl
 def load(app) -> bytes:
     """Get image data. For loaders."""
-    return pluginImgLoaderE.load()
+    loaded = pluginImgLoaderE.load()
+    if loaded:
+        # Link must be destroyed and newly created
+        if pluginImgLoaderE.lnImg:
+            pluginImgLoaderE.linkContainer.remove_child(pluginImgLoaderE.lnImg)
+        pluginImgLoaderE.lnImg = gui.Link(pluginImgLoaderE.loadedUrl, "Link to Image", width=200, height=30, margin='10px')
+        pluginImgLoaderE.linkContainer.append(pluginImgLoaderE.lnImg)
+
+        # updating is not supported
+ #       pluginImgLoaderE.lnImg.set_url(pluginImgLoaderE.loadedUrl)
+    return loaded
 
 @plugins.hookimpl
 def saveCfg(app) -> None:
