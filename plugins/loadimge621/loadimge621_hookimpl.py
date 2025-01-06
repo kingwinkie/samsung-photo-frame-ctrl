@@ -13,6 +13,9 @@ class MyImgELoader(ImgLoaderE621):
     tagRows : list[gui.Container] # list of tag text inputs
     tagsContainer : gui.Container
     api : py621Types.EAPI
+    linkContainer : gui.VBox = None # for showing link(s)
+    lnImg : gui.Link = None 
+
     def setRemote(self):
         """For setting web based remote from plugins. Returns list of remi.Widgets"""
         apis = list(map(lambda x: str(x)[5:],py621Types.EAPI))
@@ -135,7 +138,7 @@ def setRemote(app):
 def load(app) -> bytes:
     """Get image data. For loaders."""
     loaded = pluginImgLoaderE.load()
-    if loaded:
+    if loaded and pluginImgLoaderE.linkContainer:
         # Link must be destroyed and newly created
         if pluginImgLoaderE.lnImg:
             pluginImgLoaderE.linkContainer.remove_child(pluginImgLoaderE.lnImg)
