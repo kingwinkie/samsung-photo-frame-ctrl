@@ -11,16 +11,16 @@ class ImgLoaderE621(ImgLoader):
     tags : list = ["status:active"]
     downloadLimit : float = 10
     imageb : bytes # already loaded image
-    url : str = None #URL to be shown
+    url : str = None # URL to be shown
+    loadedUrl : str  = None # URL of the currently shown image. For remote link
     def __init__(self):
         super().__init__()
         self.lastDownloadAttempt = 0
-        
-        
 
     def download(self, url : str) -> io.BytesIO:
         self.waitUntilWeReSafe()
         imgFile = self.loadImgCURL( url )
+        self.loadedUrl = url
         self.url = None #filled in do() in hookimpl
         return imgFile
 
@@ -39,10 +39,7 @@ class ImgLoaderE621(ImgLoader):
         LOGGER.debug(f"Found {end} posts")
 
         if end:
-            imageNr : int = random.randint(0, end-1)
-            LOGGER.debug(f"ImageNr: {imageNr}")
-
-            post = posts[imageNr] # Select a post from the pool
+            post : int = random.choice(posts)
             return post.sample.url
         else:
             # pages may be missing. Decrease the range

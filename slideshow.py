@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import logging as LOGGER
-
 import tomlkit.toml_document
 import tomlkit.toml_file
 import imgutils as imgutils
@@ -11,8 +10,9 @@ import plugins
 import slideshow_hookimpl
 import pluginmanager_hookimpl
 from os import path as osp
+import os, sys
 from PIL import Image
-from dynaconf import Dynaconf,loaders
+from dynaconf import Dynaconf
 from dynaconf.utils.boxing import DynaBox
 import plugins.hookspecs as hookspecs
 from enum import IntEnum
@@ -48,11 +48,16 @@ class SlideShow:
     stage : Stage = Stage.LOAD # Current stage. Stages are : 0 = load, 1 = resize, 2 = show, 3 = idle
     cond : threading.Condition #notifycation for idle sleep 
     frameSize : tuple[int,int] = (1024,800) # Frame size
+    shuthown : bool = False # System should be shut down after the app quits
+    reboot : bool = False # System should be rebooted after the app quits
+    activeLoadersCount : int = 0 # count of loader plugins. Set in stageLoad. Used for determining if idleIter should be incremented
     @property
     def brightness(self):
         return 255-self.brightnessMask[3]
-    def quitApp(self, quit = True):
+    def quitApp(self, quit = True, shutdown = False, reboot = False):
         self.quit = quit
+        self.shutdown = shutdown
+        self.reboot = reboot
 
     def __init__(self):
         self.cond = threading.Condition()
@@ -136,8 +141,9 @@ class SlideShow:
         """loads a new image. Buffer is here to force a specific image from plugins"""
         self.idleIter = 0
         self.loadedByPlugin = None
+        hookImpls = self.pm.hook.load.get_hookimpls()
+        self.activeLoadersCount = len(hookImpls)
         if not buffer:
-            hookImpls = self.pm.hook.load.get_hookimpls()
             buffers = []
             for hookImpl in hookImpls:
                 buffers.append((hookImpl.plugin,hookImpl.function(app=self))) #call plugins
@@ -158,6 +164,14 @@ class SlideShow:
                 return True #must returns True if success because of plugins
         #show last downloaded image. At least show something
         self.image = self.loadedImage
+
+        if not self.image:
+            try:
+                #data = imgutils.loadFile(osp.join(osp.realpath(osp.dirname(__file__)),"res","monoscope.png"))
+                self.image = imgutils.bytes2img(osp.join(osp.realpath(osp.dirname(__file__)),"res","monoscope.png"))
+            except:
+                self.image = Image.new('RGBA', self.cfg.FRAME.IMG_SIZE, (0, 0, 0, 0)) #black screen when nothing has been loaded and there's no image at all
+            self.loadedImage = self.image
         return True
 
     def stageResize(self):
@@ -183,14 +197,16 @@ class SlideShow:
         """Calls do() in plugins"""
         wait = 1 # wait 1s
         while (self.idleIter < self.delay or self.paused) and self.stage == self.Stage.IDLE:
-            if not self.paused:
+            if not self.paused and self.activeLoadersCount:
                 self.idleIter += wait
             start = time.time()
-            self.pm.hook.do(app=self) #call plugins
-            delta = time.time() - start #measure time lost in plugins
+            self.pm.hook.do(app=self) # call plugins
+            delta = time.time() - start # measure time lose in plugins
             waitD = wait - delta
             if self.quit: return
-            if self.forceLoad: return
+            if self.forceLoad: 
+                self.idleIter = self.delay # force end of the cycle
+                return
             if waitD > 0:
                 with self.cond:
                     self.cond.wait(waitD)
@@ -275,7 +291,7 @@ class SlideShow:
         """
         self.pm.hook.saveCfg(app=self) #save current plugins config.
         
-    def run(self, cfg : Dynaconf ):
+    def run(self, cfg : Dynaconf ) -> int:
         self.cfg = cfg
         self.frameSize = self.cfg.FRAME.IMG_SIZE
         self.get_plugin_manager()
@@ -286,16 +302,23 @@ class SlideShow:
         except KeyboardInterrupt:
             LOGGER.info("Interrupted")
         self.pm.hook.exit(app=self)
+        if self.reboot:
+            LOGGER.info("System Reboot")
+            os.system('sudo shutdown -r now')
+        if self.shutdown:
+            LOGGER.info("System Shutdown")
+            os.system('sudo shutdown -h now')
+        return os.EX_OK
         
 slideShow : SlideShow = None
 if __name__ == '__main__':
     settings = Dynaconf(
         envvar_prefix="FRAME",
         root_path=osp.realpath(osp.dirname(__file__)),
-        settings_files=['settings.toml','.secrets.toml'],
-
+        settings_files=['settings.toml','.secrets.toml']
         )
     loglevel = settings.FRAME.LOGLEVEL if hasattr(settings,"FRAME") and hasattr(settings.FRAME, "LOGLEVEL") else "INFO"
     LOGGER.basicConfig(level=loglevel, format="%(asctime)s %(levelname)s:%(name)s:%(message)s")
     slideShow = SlideShow()
-    slideShow.run(settings)
+    ex = slideShow.run(settings)
+    sys.exit(ex) 
