@@ -82,3 +82,13 @@ def setRemote(app):
 @plugins.hookimpl
 def loadAfter(app):
     """Called after successful load"""
+
+@plugins.hookimpl
+def setAPI(app, router):
+    """
+    Placeholder for setting plugin specific REST API calls.
+    Should contain:
+    @router.get("/"+PLUGIN_NAME+"/api_point")
+        def api_point():
+            return {"message": "Not implemented yet"}
+    """

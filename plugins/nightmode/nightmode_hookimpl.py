@@ -1,5 +1,6 @@
 import plugins
 from nightmode import Nightmode
+from fastapi import APIRouter
 PLUGIN_NAME = "NIGHTMODE"
 PLUGIN_FANCY_NAME = "Night Mode"
 PLUGIN_SORT_ORDER = 310
@@ -59,3 +60,15 @@ def saveCfg(app) -> None:
     """
     app.saveCfg(PLUGIN_NAME, {"NIGHT_BRIGHTNESS": nightmode.nightBrightness,
                               "TIMES": nightmode.srcTable})
+    
+@plugins.hookimpl
+def setAPI(app, router : APIRouter):
+    """
+    Placeholder for setting plugin specific REST API calls.
+    Should contain:
+    """
+    
+    @router.get("/"+PLUGIN_NAME+"/set")
+    def nightmodeAPI(mode : str):
+        nightmode.setMode(nightmode.MODE[mode])
+        return {"message": f"Nightmode set to {mode}"}

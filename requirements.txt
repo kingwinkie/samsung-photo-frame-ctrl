@@ -13,4 +13,6 @@ qrcode
 netifaces
 tomlkit
 dateutils
+fastapi
+uvicorn
 -r plugins/gphoto/requirements.txt

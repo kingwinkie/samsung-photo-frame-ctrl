@@ -181,7 +181,7 @@ class EffectAnimated(Effect):
 
     def goThreaded(self):
         """Threaded run"""
-        self.thread = threading.Thread(target=self.go, daemon=True)
+        self.thread = threading.Thread(target=self.go, daemon=True, name="LED")
         self.thread.start()
     
     def stop(self):

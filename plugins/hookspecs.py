@@ -88,4 +88,12 @@ def loadAfter(app):
 def load(app) -> bytes:
     """Get image data. For loaders."""
 
-    
+@hookspec
+def setAPI(app, router):
+    """
+    Placeholder for setting plugin specific REST API calls.
+    Should contain:
+    @router.get("/"+PLUGIN_NAME+"/api_point")
+        def api_point():
+            return {"message": "Not implemented yet"}
+    """

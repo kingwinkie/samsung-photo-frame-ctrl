@@ -13,7 +13,7 @@ class DummyFrame:
 
     def __init__(self, app : SlideShow):
         self.window_size = app.frameSize
-        self.displayThread = threading.Thread(target=self.runner, daemon=True)
+        self.displayThread = threading.Thread(target=self.runner, daemon=True, name="Display")
         self.displayThread.start()
         self.image = None
         self.app = app

@@ -1,17 +1,20 @@
 import plugins
 import logging as LOGGER
 import remi
+
 PLUGIN_NAME = "PLUGINS"
 PLUGIN_FANCY_NAME = "Plugins Manager"
 PLUGIN_CLASS = "PLUGINS"
 PLUGIN_SORT_ORDER = 1000
 
 class PluginManager:
-    
+    app  = None
     def getPluginsContainer(self) -> remi.gui.Container:
         """Container with list of plugins and on/off checkboxes"""
         container = None
-        pl = self.app.pm.getAvailablePlugins()
+        pl = None
+        if self.app:
+            pl = self.app.pm.getAvailablePlugins()
         if pl:
             container = remi.gui.VBox(style={'width': '100%', 'text-align': 'center', 'align-items':'left'})
             checks = []

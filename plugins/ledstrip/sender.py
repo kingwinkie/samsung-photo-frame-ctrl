@@ -54,11 +54,11 @@ class Sender:
     def start(self):
         self.run = True
         if not self.senderThread:
-            self.senderThread = threading.Thread(target=self.sender, daemon=True)
+            self.senderThread = threading.Thread(target=self.sender, daemon=True,name="LEDSender")
             self.senderThread.start()
         else:
             if not self.senderThread.is_alive():
-                self.senderThread = threading.Thread(target=self.sender, daemon=True)
+                self.senderThread = threading.Thread(target=self.sender, daemon=True,name="LEDSender")
                 self.senderThread.start()
 
     

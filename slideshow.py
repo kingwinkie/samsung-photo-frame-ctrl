@@ -12,7 +12,7 @@ import pluginmanager_hookimpl
 from os import path as osp
 import os, sys
 from PIL import Image
-from dynaconf import Dynaconf
+from dynaconf import Dynaconf, loaders
 from dynaconf.utils.boxing import DynaBox
 import plugins.hookspecs as hookspecs
 from enum import IntEnum
@@ -62,7 +62,9 @@ class SlideShow:
     def __init__(self):
         self.cond = threading.Condition()
 
-   
+    def createAPI(self, router):
+        self.pm.hook.setAPI(app=self, router=router) # set REST API (FastAPI) here
+        
 
     def createRemote(self) -> list[list[remi.Widget]]:
         """Called from remote (if exists). For setting remote UI in plugins"""
@@ -262,6 +264,7 @@ class SlideShow:
         except FileNotFoundError:
             doc = tomlkit.toml_document.TOMLDocument()
         data = loaders.toml_loader.encode_nulls(data)
+        
         doc.update(data)
         file.write(doc)
 
