@@ -3,7 +3,7 @@ import remi
 import logging as LOGGER
 
 class RemoteWeb(remi.App):
-    pluginsContainer = None #container with list of plugins
+    pluginsContainer = None # container with list of plugins
     verticalContainer : gui.Container # Base continer
     pluginContainers : list[gui.Container]
     def main(self, userdata):

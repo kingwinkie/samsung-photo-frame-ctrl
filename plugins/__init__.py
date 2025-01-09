@@ -1,9 +1,7 @@
 import sys
 import os
-import inspect
 import pluggy
 import logging as LOGGER
-
 from types import ModuleType
 from plugins import hookspecs
 from pkgutil import extend_path
@@ -64,7 +62,7 @@ def create_plugin_manager():
 class FramePluginManager(pluggy.PluginManager):
     pluginsAvailable : list[tuple[bool,str, ModuleType]] = []
     
-    def load_all_plugins(self, paths : str, active : list[str]=None):
+    def load_all_plugins(self, paths : str, active : list[str]=None, pluginClasses : list[str]=None):
         """Register the core plugins, load plugins from setuptools entry points
         and the load given module/package paths.
 
@@ -88,6 +86,9 @@ class FramePluginManager(pluggy.PluginManager):
 
         for plugin in plugins:
             name = getattr(plugin, 'PLUGIN_NAME', None)
+            pluginClass = getattr(plugin, 'PLUGIN_CLASS', None)
+            if pluginClasses and pluginClass not in pluginClasses:
+                continue # Class(es) were specified and the plugin is of a different class. Used for displays in showimage
             self.register(plugin, name=name) #plugin must be registered for getting its friendly name
             if active and name in active:
                 pluginIsActive = True
@@ -115,13 +116,13 @@ class FramePluginManager(pluggy.PluginManager):
         
 
 
-    def loadAllPluginsFromDir(self,  active : str , path : str = None):
+    def loadAllPluginsFromDir(self,  active : str , path : str = None, pluginClasses : list[str]=None):
         """Loads all plugins from the path. If path is not set then from this file directory"""
         path = os.path.realpath(os.path.dirname(__file__))
         dirs = os.listdir(path)
         dirs = filter(lambda x: os.path.isdir(os.path.join(path,x)) and x != 'plugin_template' and x[:2] != '__',dirs)
         dirs=list(dirs)
-        self.load_all_plugins(dirs, active)
+        self.load_all_plugins(dirs, active, pluginClasses)
 
     def getFancyName(self, plugin, version=True):
         """Return the friendly name of the given plugin and

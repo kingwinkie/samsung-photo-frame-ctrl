@@ -4,6 +4,7 @@ import logging as LOGGER
 import qrcode
 import getips
 import remi
+import time
 
 PLUGIN_NAME = "REMOTE"
 PLUGIN_FANCY_NAME = "Remote Controller"
@@ -15,6 +16,8 @@ class Remote:
     serverApp : remote.RemoteWeb = None
     serverUrl : str # URL of the server
     initialRun : bool = True #for showing the QR code. 
+    startupStamp : float = 0 # QR code is visible first 60s. Set in startup. Cloed when first contact has been made
+    
     def start(self, app):
         """Starts the web app"""
         self.app = app
@@ -35,7 +38,8 @@ class Remote:
         Place for setting initail values on the web
         """
         self.serverApp = serverApp
-
+        self.startupStamp = 0 #first connection attempt made. Closing QR code
+        
     def shutdown(self):
         self.server.stop()
     
@@ -57,7 +61,8 @@ def imageChangeBefore(app) -> None:
     """called after image was successfuly changed on the screen
     Intended for effects etc. Image is in app.image
     """
-    if app.remote.initialRun:
+    tdelta = time.time() - app.remote.startupStamp 
+    if  app.remote.startupStamp and tdelta < 60 : #shoq qr code at least first 60s
         qr = qrcode.QRCode(version=1,
                         error_correction=qrcode.constants.ERROR_CORRECT_L,
                         box_size=7,
@@ -83,6 +88,7 @@ def startup(app) -> None:
     """
     app.remote = Remote()
     app.remote.start(app)
+    app.remote.startupStamp = time.time()
 
 @plugins.hookimpl
 def loadCfg(app) -> None:
