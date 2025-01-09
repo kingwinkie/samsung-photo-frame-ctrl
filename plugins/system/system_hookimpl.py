@@ -1,6 +1,6 @@
 import plugins
 import remi.gui as gui
-import os
+from fastapi import APIRouter
 from slideshow import SlideShow
 PLUGIN_NAME = "SYSTEM" # set plugin name here. This must be the same as prefix of this file.
 PLUGIN_FANCY_NAME = "System management" # set fancy name for remote controller here
@@ -32,3 +32,34 @@ def setRemote(app):
     systemManagement.app = app
     return systemManagement.setRemote()
 
+
+
+@plugins.hookimpl
+def setAPI(app : SlideShow):
+    """
+    Placeholder for setting plugin specific REST API calls.
+    Should contain:
+    router = APIRouter()
+    @router.get("/api_point")
+        def api_point():
+            return {"message": "Not implemented yet"}
+    app.api.registerRouter(PLUGIN_NAME, router)
+    """
+    router = APIRouter()
+
+    @router.get("/turnoff")
+    def turnoff():
+        app.quitApp(quit=True, shutdown=False, reboot=False)
+        return {"message": f"Turning Off"}
+    
+    @router.get("/shutdown")
+    def shutdown():
+        app.quitApp(quit=True, shutdown=True, reboot=False)
+        return {"message": f"Shuting Down"}
+    
+    @router.get("/restart")
+    def restart():
+        app.quitApp(quit=True, shutdown=False, reboot=True)
+        return {"message": f"Restarting"}
+    app.api.registerRouter(PLUGIN_NAME, router)
+    

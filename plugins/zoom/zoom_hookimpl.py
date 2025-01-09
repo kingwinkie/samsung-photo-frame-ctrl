@@ -1,9 +1,10 @@
 import plugins
 import imgutils
 from PIL import Image
+from slideshow import SlideShow
 from imgutils import Dimension
 import remi.gui as gui
-
+from fastapi import APIRouter
 PLUGIN_NAME = "ZOOM"
 PLUGIN_FANCY_NAME = "Zoom"
 PLUGIN_SORT_ORDER = 320
@@ -111,3 +112,28 @@ def setRemote(app):
 def loadAfter(app):
     """Called after successful load"""
     app.zoom.setZoom(100) #set zoom back to 100%
+
+@plugins.hookimpl
+def setAPI(app : SlideShow):
+    """
+    Placeholder for setting plugin specific REST API calls.
+    Should contain:
+    router = APIRouter()
+    @router.get("/api_point")
+        def api_point():
+            return {"message": "Not implemented yet"}
+    app.api.registerRouter(PLUGIN_NAME, router)
+    """
+    router = APIRouter()
+    @router.get("/zoom")
+    def zoom():
+        return {"message": app.zoom.zoom}
+    
+    @router.put("/zoom")
+    def zoomSet(value : int):
+        app.zoom.setZoom(value)
+        app.setStage(app.Stage.LOAD)
+        return {"message": app.zoom.zoom}
+    
+    app.api.registerRouter(PLUGIN_NAME, router)
+    

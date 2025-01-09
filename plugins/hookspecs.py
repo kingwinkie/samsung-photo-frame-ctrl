@@ -89,11 +89,13 @@ def load(app) -> bytes:
     """Get image data. For loaders."""
 
 @hookspec
-def setAPI(app, router):
+def setAPI(app):
     """
     Placeholder for setting plugin specific REST API calls.
     Should contain:
-    @router.get("/"+PLUGIN_NAME+"/api_point")
+    router = APIRouter()
+    @router.get("/api_point")
         def api_point():
             return {"message": "Not implemented yet"}
+    app.api.registerRouter(PLUGIN_NAME, router)
     """

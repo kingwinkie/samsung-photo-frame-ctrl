@@ -52,11 +52,14 @@ class Clocks:
         alignCont = gui.HBox()
         lblHAlign = gui.Label('HAlign:', style={'text-align':'Left', 'margin-right':'10px'})
         ddHAlign = gui.DropDown.new_from_list([e.name for e in imgutils.HAlign],width=80, height=20, margin='4px',style={'margin-right':'10px'})
-        ddHAlign.set_value(self.align[0].name)
+        
         ddHAlign.onchange.do(self.on_dd_halign_change)
         lblVAlign = gui.Label('VAlign:', style={'text-align':'Left', 'margin-right':'10px'})
         ddVAlign = gui.DropDown.new_from_list([e.name for e in imgutils.VAlign],width=80, height=20, margin='4px')
-        ddVAlign.set_value(self.align[1].name)
+        if hasattr( self, "align" ):
+            ddHAlign.set_value(self.align[0].name)
+            ddVAlign.set_value(self.align[1].name)
+        
         ddVAlign.onchange.do(self.on_dd_valign_change)
         alignCont.append([lblHAlign,ddHAlign,lblVAlign,ddVAlign])
       

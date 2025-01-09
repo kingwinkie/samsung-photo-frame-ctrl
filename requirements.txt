@@ -15,4 +15,5 @@ tomlkit
 dateutils
 fastapi
 uvicorn
+python-multipart
 -r plugins/gphoto/requirements.txt

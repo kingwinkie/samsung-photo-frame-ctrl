@@ -20,6 +20,7 @@ import threading
 import remi
 import random
 import tomlkit
+import tempfile
 
 class SlideShow:
     class Stage(IntEnum):
@@ -32,6 +33,7 @@ class SlideShow:
             LOGGER.debug(f"New Stage: {newStage.name}")
             return newStage
 
+    uploadPath : str  = tempfile.gettempdir() # path for uplading files. For RPI should be in temp because we're RO
     loadedByPlugin : str = None # plugin which loaded the active image            
     image : Image = None # current image
     resizedImage : Image = None # image after resize stage
@@ -62,8 +64,8 @@ class SlideShow:
     def __init__(self):
         self.cond = threading.Condition()
 
-    def createAPI(self, router):
-        self.pm.hook.setAPI(app=self, router=router) # set REST API (FastAPI) here
+    def createAPI(self):
+        self.pm.hook.setAPI(app=self) # set REST API (FastAPI) here
         
 
     def createRemote(self) -> list[list[remi.Widget]]:
@@ -99,6 +101,9 @@ class SlideShow:
                 self.remote.serverApp.addPluginContainer(plugin.PLUGIN_NAME,
                     self.pm.getFancyName(plugin, False),
                     plugin.setRemote(app=self)) #call plugin
+            if hasattr(self, "api") and hasattr(plugin, "setAPI"):
+                plugin.setAPI(self)
+
             if hasattr(plugin, "PLUGIN_CLASS"):
                 if plugin.PLUGIN_CLASS == "LOADER":
                     stage = None
@@ -113,6 +118,22 @@ class SlideShow:
         self.setStage(self.Stage.LOAD)
         if hasattr(self, "remote"):
             self.remote.serverApp.removePluginContainer(pluginName)
+
+ 
+    def fileUpload(self,filename : str, plugin_name : str):
+        """
+        Called from plugins when file was uploaded. Forces show the file
+        """
+        fullPath : str = os.path.join(self.uploadPath, filename)
+        if self.stageLoad(fullPath): #lazy !!!
+            self.loadedByPlugin = plugin_name
+            self.setStage(self.Stage.LOAD)
+        try:
+            os.remove(fullPath) # remove downloaded file
+        except OSError as e:
+            LOGGER.error(f"File couldn't be removed {fullPath} {e}")
+            
+        
 
 
     def sendToFrame(self):

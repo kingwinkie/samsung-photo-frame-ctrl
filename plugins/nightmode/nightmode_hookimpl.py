@@ -1,4 +1,5 @@
 import plugins
+from slideshow import SlideShow
 from nightmode import Nightmode
 from fastapi import APIRouter
 PLUGIN_NAME = "NIGHTMODE"
@@ -62,13 +63,25 @@ def saveCfg(app) -> None:
                               "TIMES": nightmode.srcTable})
     
 @plugins.hookimpl
-def setAPI(app, router : APIRouter):
+def setAPI(app : SlideShow):
     """
     Placeholder for setting plugin specific REST API calls.
     Should contain:
+    router = APIRouter()
+    @router.get("/api_point")
+        def api_point():
+            return {"message": "Not implemented yet"}
+    app.api.registerRouter(PLUGIN_NAME, router)
     """
+    router = APIRouter()
+    @router.get("/mode")
+    def nightmodeAPI():
+        return {"message": app.nightmode.currentMode.name}
     
-    @router.get("/"+PLUGIN_NAME+"/set")
-    def nightmodeAPI(mode : str):
-        nightmode.setMode(nightmode.MODE[mode])
-        return {"message": f"Nightmode set to {mode}"}
+    @router.put("/mode")
+    def nightmodeAPISet(value : str):
+        nightmode.setMode(nightmode.MODE[value])
+        return {"message": app.nightmode.currentMode.name}
+    
+    app.api.registerRouter(PLUGIN_NAME, router)
+    
