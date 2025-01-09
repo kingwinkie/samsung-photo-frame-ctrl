@@ -11,7 +11,7 @@ class MyImgURLLoader(ImgLoaderURL):
     tx_url : gui.TextInput = None
     def setRemote(self):
         lbl_url = gui.Label(f"URL:",style={'text-align':'Left'})
-        self.tx_url = gui.TextInput(height=200, margin='4px',single_line=True, hint = "Insert URL of the gicture(s) here")
+        self.tx_url = gui.TextInput(height=200, margin='4px',single_line=True, hint = "Insert URL of the picture(s) here")
         self.tx_url.set_value(self.url)
         self.tx_url.onchange.do(self.on_url_changed)
         return [lbl_url, self.tx_url]
