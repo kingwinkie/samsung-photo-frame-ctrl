@@ -53,7 +53,7 @@ class RemoteWeb(remi.App):
     
 def startWeb(address : str='localhost', port : int=8088, start_browser : bool = False, caller = None) -> remi.Server:
     """Start the server."""
-    server = remi.Server(RemoteWeb,title = 'Photot Frame',  start = False, address=address, port=port, start_browser=start_browser, multiple_instance=False,userdata=(caller,))
+    server = remi.Server(RemoteWeb,title = 'Photo Frame',  start = False, address=address, port=port, start_browser=start_browser, multiple_instance=False,userdata=(caller,))
     server.start()
     return server
     
