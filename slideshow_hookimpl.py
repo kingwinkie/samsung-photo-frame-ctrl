@@ -85,7 +85,7 @@ class Remote:
     def fileupload_on_success(self,widget, filename):
         """Event called after file upload"""
         self.lbl.set_text('Photo upload success: ' + filename)
-        self.app.fileUpload(filename)
+        self.app.fileUpload(filename,PLUGIN_NAME)
 
     def fileupload_on_failed(self, widget, filename):
             """Event called after file upload"""
