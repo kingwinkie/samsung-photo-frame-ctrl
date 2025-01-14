@@ -2,9 +2,10 @@ import remi.gui as gui
 from slideshow import SlideShow
 import plugins
 import logging as LOGGER
-from imgutils import drawText, HAlign, VAlign
+import  imgutils
 from fastapi import APIRouter, HTTPException, File, UploadFile
 import os.path as osp
+import base64
 
 PLUGIN_NAME = "SLIDESHOW" # set plugin name here. This must be the same as prefix of this file.
 PLUGIN_FANCY_NAME = "SlideShow" # set fancy name for remote controller here
@@ -14,7 +15,7 @@ PLUGIN_SORT_ORDER = "0" #Order for remote controller dialogs. Ascending.
 class Remote:
     app : SlideShow = None
     fileName : str = None # Last successfuly uploaded file
-    
+    imgSize : tuple # Preview image size
     def setRemote(self):
         """
         Basic RC widget with load, pause and upload buttons, brightness etc.
@@ -23,6 +24,11 @@ class Remote:
         """
 
         self.lbl = gui.Label('Photo Frame started', height=30, margin='10px')
+        imgWidth = 200
+        imgHeight = int(imgWidth/imgutils.ar(self.app.frameSize))
+        self.imgSize = (imgWidth,imgHeight)
+        b64Img = self.getPreviewImg()
+        self.img = gui.Image(b64Img, width = self.imgSize[0], height = self.imgSize[1])
         self.bt_pause = gui.Button('Pause', width=200, height=30, margin='4px')
         self.bt_pause.onclick.do(self.on_bt_pause_pressed)
         self.bt_load = gui.Button('Load', width=200, height=30, margin='4px')
@@ -48,8 +54,22 @@ class Remote:
         bt_saveConfig.onclick.do(self.on_saveConfig)
 
 
-        return([self.lbl, self.bt_pause, self.bt_load, self.nextLoad, delayCont,self.slider_brightness_lbl, self.slider_brightness, uploadCont, bt_saveConfig])
+        return([self.lbl, self.img, self.bt_pause, self.bt_load, self.nextLoad, delayCont,self.slider_brightness_lbl, self.slider_brightness, uploadCont, bt_saveConfig])
     
+
+    def getPreviewImg(self) -> bytes:
+        if self.app.image:
+            rgbImage = self.app.image.convert("RGB") # for jpeg must be converted to RGB
+            resized = rgbImage.resize(self.imgSize)
+            buffer = imgutils.imgToBytes(resized)
+            b64Img = base64.b64encode(buffer)
+            return "data:image/jpeg;base64, "+b64Img.decode()
+
+    def setImage(self):
+        b64Img = self.getPreviewImg()
+        remote.img.set_image(b64Img)
+        
+
     def setBrightness(self, value : int):
         self.app.setBrightness(int(value))
         self.app.setStage(self.app.Stage.RESIZE)
@@ -85,7 +105,7 @@ class Remote:
     def fileupload_on_success(self,widget, filename):
         """Event called after file upload"""
         self.lbl.set_text('Photo upload success: ' + filename)
-        self.app.fileUpload(filename)
+        self.app.fileUpload(filename,PLUGIN_NAME)
 
     def fileupload_on_failed(self, widget, filename):
             """Event called after file upload"""
@@ -116,11 +136,13 @@ def imageLoader(app):
     """
 
 @plugins.hookimpl
-def imageChangeAfter(app) -> None:
+def imageChangeAfter(app : SlideShow) -> None:
     """called after image was successfuly changed on the screen
     Intended for effects etc. Image is in app.image
     """
-
+    if hasattr(remote,"img"):
+        remote.setImage()
+        
 @plugins.hookimpl
 def imageChangeBefore(app) -> None:
     """called after image was successfuly changed on the screen
@@ -129,7 +151,7 @@ def imageChangeBefore(app) -> None:
     # add image name
     if remote and app.loadedByPlugin == PLUGIN_NAME and remote.fileName:
         text=f"{remote.fileName}"
-        app.image = drawText(text=text, size=app.frameSize, fontSize=12, textColor=(192,192,192,192), align=(HAlign.RIGHT, VAlign.BOTTOM), bgImage=app.image, offset=(10,5))
+        app.image = imgutils.drawText(text=text, size=app.frameSize, fontSize=12, textColor=(192,192,192,192), align=(imgutils.HAlign.RIGHT, imgutils.VAlign.BOTTOM), bgImage=app.image, offset=(10,5))
 
 
 @plugins.hookimpl
