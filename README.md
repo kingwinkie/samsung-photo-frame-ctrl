@@ -63,7 +63,6 @@ Installation
 ------------
 * clone the repository
 * create venv (python -m venv .venv)
-* install the main package (.venv/bin/pip install -e samsungframe)
 * create, check, add or modify settings.local.toml and .secrets.toml
 
 Usage
