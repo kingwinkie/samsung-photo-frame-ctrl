@@ -18,7 +18,6 @@ The main differences are:
 
 Features
 --------
-* The behavior can be configured via config.py
   
 * frame_ctrl.py
   * If the photo frame is in mass storage mode, the program will change it into mini display mode.
@@ -62,16 +61,19 @@ Supported photo frames
 Installation
 ------------
 * clone the repository
+* cd samsung-photo-frame-ctrl
 * create venv (python -m venv .venv)
-* create, check, add or modify settings.local.toml and .secrets.toml
+* create, check, add or modify settings.toml and .secrets.toml (there is a image setting in settings.toml that might have to be changed)
+* .venv/bin/pip install -r requirements.txt
+* sudo .venv/bin/python3 ./slideshow.py 
 
 Usage
 -----
 
-`sudo python3 ./slideshow.py`
+`sudo /"pathto"/.venv/bin/python3 ./slideshow.py`
 
 Show IP address(es) with background image:
-`python getips.py | python txt2img.py -bi res\wifibg.jpg -o - | python show-image.py`
+`sudo /"pathto"/.venv/bin/python3 getips.py | python txt2img.py -bi res/wifibg.jpg -o - | python show-image.py`
 
 On Raspberry Pi Zero W
 -----
