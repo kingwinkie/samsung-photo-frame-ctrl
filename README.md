@@ -78,6 +78,6 @@ As the files want to run as root and it seems that you have to put the path in t
 
 sudo /home/pi/git/samsung-photo-frame-ctrl/.venv/bin/python3 /home/pi/git/samsung-photo-frame-ctrl/slideshow.py
 
-* add `/home/pi/frame/.venv/bin/python3 /home/pi/frame/samsung-photo-frame-ctrl/slideshow.py &` to /etc/rc.local before 'exit 0' row
+* add `"pathto"/.venv/bin/python3 "pathto"/samsung-photo-frame-ctrl/slideshow.py &` to /etc/rc.local before 'exit 0' row
 
 In default settings there's a remote controller available through web at port 8088
