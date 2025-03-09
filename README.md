@@ -70,19 +70,14 @@ Installation
 Usage
 -----
 
-`sudo /"pathto"/.venv/bin/python3 ./slideshow.py`
+`sudo "pathto"/.venv/bin/python3 "pathto"/slideshow.py`
 
 Show IP address(es) with background image:
-`sudo /"pathto"/.venv/bin/python3 getips.py | python txt2img.py -bi res/wifibg.jpg -o - | python show-image.py`
 
-On Raspberry Pi Zero W
------
-* Install the latest 64bit Raspbian Lite, boot your RPi:
-* `mkdir /home/pi/frame`
-* `sudo apt install python3 pip git`
-* `python3 -m venv /home/pi/frame/.venv`
-* `git clone https://github.com/bero158/samsung-photo-frame-ctrl /home/pi/frame/samsung-photo-frame-ctrl`
-* try `/home/pi/frame/.venv/bin/python3 /home/pi/frame/samsung-photo-frame-ctrl/slideshow.py`
+As the files want to run as root and it seems that you have to put the path in to the .venv it can get awkward
+
+sudo /home/pi/git/samsung-photo-frame-ctrl/.venv/bin/python3 /home/pi/git/samsung-photo-frame-ctrl/slideshow.py
+
 * add `/home/pi/frame/.venv/bin/python3 /home/pi/frame/samsung-photo-frame-ctrl/slideshow.py &` to /etc/rc.local before 'exit 0' row
 
 In default settings there's a remote controller available through web at port 8088
