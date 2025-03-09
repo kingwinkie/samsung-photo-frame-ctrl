@@ -72,12 +72,26 @@ Usage
 
 `sudo "pathto"/.venv/bin/python3 "pathto"/slideshow.py`
 
-Show IP address(es) with background image:
-
 As the files want to run as root and it seems that you have to put the path in to the .venv it can get awkward
 
+My example startup
+
 sudo /home/pi/git/samsung-photo-frame-ctrl/.venv/bin/python3 /home/pi/git/samsung-photo-frame-ctrl/slideshow.py
+
+While the command below should work on a raspberry pi the rc.local may not be there 
 
 * add `"pathto"/.venv/bin/python3 "pathto"/samsung-photo-frame-ctrl/slideshow.py &` to /etc/rc.local before 'exit 0' row
 
 In default settings there's a remote controller available through web at port 8088
+
+
+Show IP address(es) with background image Sample command:
+
+python getips.py | python txt2img.py -bi res\wifibg.jpg -o - | python show-image.py (note there is no path on the commands and the res\wifibg.jpg slash direction )
+
+There is also a script folder with sample .sh
+
+What I want to do
+-----------------
+
+I want to try and merge some of https://github.com/mathoudebine/turing-smart-screen-python
