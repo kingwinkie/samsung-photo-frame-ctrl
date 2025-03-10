@@ -11,22 +11,31 @@ PLUGIN_CLASS = "EFFECT"
 class Clocks:
     app : SlideShow = None
     shownTime : str = ""
+    currentDate: str = ""  # Initialize with an empty string
     textColor : str = "#F5F5DC"
     fontSize : int = 200
     fontDesc : tuple[str, str] = None # current font name, current font path
     align : tuple[imgutils.HAlign, imgutils.VAlign]
 
+    def getDate(self) -> str:
+        return time.strftime('%Y-%m-%d')  # Format the date as needed
     def getTime(self) -> str:
         text : str = time.strftime('%X')
         return text
     def showTime(self):
         if not self.app: return
         size = self.app.frameSize
-        text : str = self.getTime()
-        text = ':'.join(text.split(':')[:-1])
-        fontPath : str = None if not self.fontDesc else self.fontDesc[1]
-        self.app.image = imgutils.drawText(text=text, size=size, fontSize=self.fontSize, textColor=self.textColor, align=self.align, bgImage=self.app.image,fontPath=fontPath)
-        self.shownTime = text
+	    # Get and format the current time
+        time_text: str = self.getTime()
+        time_text = ':'.join(time_text.split(':')[:-1])  # Remove seconds
+   	 # Get and format the current date
+        date_text: str = self.getDate()
+        fontPath: str = None if not self.fontDesc else self.fontDesc[1]
+   	 # Draw the time
+        self.app.image = imgutils.drawText(text=time_text, size=size, fontSize=self.fontSize, textColor=self.textColor, align=self.align, bgImage=self.app.image, fontPath=fontPath)
+   	 # Draw the date in the upper right corner
+        self.app.image = imgutils.drawText(text=date_text, size=size, fontSize=self.fontSize // 2, textColor=self.textColor, align=(imgutils.HAlign.RIGHT, imgutils.VAlign.TOP), bgImage=self.app.image, fontPath=fontPath)
+        self.shownTime = time_text
     # remote UI
     def setRemote(self):
         lblColor = gui.Label('Color:', style={'text-align':'Left'})
@@ -113,6 +122,7 @@ def imageChangeBefore(app : SlideShow) -> None:
 def do(app : SlideShow) -> None:
     now = clocks.getTime()
     if now != clocks.shownTime:
+        clocks.currentDate = clocks.getDate()  # Update the current date
         app.setStage(app.Stage.RESIZE)
 
 @plugins.hookimpl
