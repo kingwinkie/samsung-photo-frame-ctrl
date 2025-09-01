@@ -1,0 +1,8 @@
+[Unit]
+Description=photo frame
+[Service]
+ExecStart=/Path to python/samsung-photo-frame-ctrl/venv/bin/python3 /path to slideshow/samsung-photo-frame-ctrl/slideshow.py
+Restart=always
+WorkingDirectory=/home/pi/git/samsung-photo-frame-ctrl
+[Install]
+WantedBy=multi-user.target
