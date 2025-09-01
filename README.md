@@ -91,6 +91,18 @@ python getips.py | python txt2img.py -bi res\wifibg.jpg -o - | python show-image
 
 There is also a script folder with sample .sh
 
+Added photo_frame.service
+
+1.Edit the photo_frame.service file for your install.
+2. Copy it to /etc/systemd/system:
+sudo cp photo_frame.service /etc/systemd/system/
+3. Update systemd’s internal data:
+sudo systemctl daemon-reload
+4. Enable your service 
+sudo systemctl enable photo_frame.service
+5. Start it
+sudo systemctl photo_frame.service
+
 What I want to do
 -----------------
 
